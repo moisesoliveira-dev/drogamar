@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+.git
+.gitignore
+*.md
+.vscode
+.idea
+*.log
+*.local
+.env
+.env.*
+coverage
+eslint.config.js
