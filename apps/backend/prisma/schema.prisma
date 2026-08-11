@@ -27,14 +27,15 @@ enum StockItemType {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
+  id            String           @id @default(cuid())
+  email         String           @unique
   passwordHash  String
   name          String
-  status        UserStatus     @default(ACTIVE)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  status        UserStatus       @default(ACTIVE)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   refreshTokens RefreshToken[]
+  stockExports  StockExportJob[]
 
   @@index([email])
   @@map("users")
@@ -189,4 +190,58 @@ model StockLot {
   @@index([locationId])
   @@index([lotNumber])
   @@map("stock_lots")
+}
+
+enum StockExportType {
+  ITEMS
+  LOTS_EXPIRY
+  CURRENT_STOCK
+  CATEGORIES
+}
+
+enum StockExportFormat {
+  XLSX
+  CSV
+  PDF
+}
+
+enum StockExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+model StockExportJob {
+  id             String            @id @default(cuid())
+  sequentialId   Int               @unique @default(autoincrement())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           StockExportType
+  format         StockExportFormat
+  status         StockExportStatus @default(PENDING)
+  fileName       String
+  storedPath     String?
+  mimeType       String?
+  fileSizeBytes  Int?
+  recordCount    Int?
+  filtersJson    Json
+  columnsJson    Json
+  sortBy         String
+  sortDir        String
+  errorCode      String?
+  errorMessage   String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  expiresAt      DateTime?
+  downloadedAt   DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("stock_export_jobs")
 }
