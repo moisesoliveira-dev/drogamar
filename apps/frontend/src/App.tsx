@@ -67,6 +67,12 @@ const CarrinhoContainer = lazy(() =>
   })),
 )
 
+const CodigoBarrasContainer = lazy(() =>
+  import('./features/vendas-codigo-barras').then((m) => ({
+    default: m.CodigoBarrasContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -237,6 +243,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <CarrinhoContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="vendas/codigo-barras"
+                element={
+                  <Suspense fallback={null}>
+                    <CodigoBarrasContainer />
                   </Suspense>
                 }
               />
