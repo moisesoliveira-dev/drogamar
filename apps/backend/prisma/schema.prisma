@@ -37,6 +37,7 @@ model User {
   refreshTokens RefreshToken[]
   stockExports       StockExportJob[]
   onlineStoreSyncJobs OnlineStoreSyncJob[]
+  saleCarts          SaleCart[]
 
   @@index([email])
   @@map("users")
@@ -158,6 +159,7 @@ model StockItem {
 
   lots                     StockLot[]
   onlineListings           OnlineStoreListing[]
+  saleCartItems            SaleCartItem[]
 
   @@unique([code])
   @@unique([sku])
@@ -362,4 +364,81 @@ model OnlineStoreSyncJob {
   @@index([userId])
   @@index([status])
   @@map("online_store_sync_jobs")
+}
+
+enum CustomerDocumentType {
+  CPF
+  CNPJ
+  OTHER
+}
+
+enum SaleCartStatus {
+  OPEN
+  CHECKOUT_PENDING
+  CLOSED
+  CANCELLED
+}
+
+model Customer {
+  id           String                @id @default(cuid())
+  code         String
+  name         String
+  documentType CustomerDocumentType?
+  document     String?
+  email        String?
+  phone        String?
+  active       Boolean               @default(true)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  carts        SaleCart[]
+
+  @@unique([code])
+  @@index([name])
+  @@index([document])
+  @@index([active])
+  @@map("customers")
+}
+
+model SaleCart {
+  id              String         @id @default(cuid())
+  sequentialId    Int            @unique @default(autoincrement())
+  status          SaleCartStatus @default(OPEN)
+  operatorId      String
+  operator        User           @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  customerId      String?
+  customer        Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cartDiscount    Decimal        @default(0) @db.Decimal(18, 4)
+  cartSurcharge   Decimal        @default(0) @db.Decimal(18, 4)
+  notes           String?
+  lastValidatedAt DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  items           SaleCartItem[]
+
+  @@index([operatorId, status])
+  @@index([customerId])
+  @@index([status])
+  @@map("sale_carts")
+}
+
+model SaleCartItem {
+  id                 String    @id @default(cuid())
+  cartId             String
+  cart               SaleCart  @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  stockItemId        String
+  stockItem          StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  quantity           Decimal   @db.Decimal(18, 4)
+  unitPrice          Decimal   @db.Decimal(18, 4)
+  lineDiscount       Decimal   @default(0) @db.Decimal(18, 4)
+  unitCode           String?
+  productCode        String
+  productDescription String
+  sku                String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([cartId, stockItemId])
+  @@index([cartId])
+  @@index([stockItemId])
+  @@map("sale_cart_items")
 }

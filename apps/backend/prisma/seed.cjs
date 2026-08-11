@@ -103,6 +103,7 @@ async function main() {
       trackExpiry: true,
       trackStock: true,
       costPrice: 12.5,
+      salePrice: 28.9,
       status: 'ACTIVE',
       measureUnitId: unit?.id,
       categoryId: category?.id,
@@ -135,6 +136,7 @@ async function main() {
       trackExpiry: true,
       trackStock: true,
       costPrice: 45,
+      salePrice: 89,
       status: 'ACTIVE',
       measureUnitId: unit?.id,
       categoryId: category?.id,
@@ -232,8 +234,46 @@ async function main() {
     data: { currentStock: totalQtyB },
   });
 
+  const customers = [
+    {
+      code: 'CLI-001',
+      name: 'Cliente Balcão',
+      documentType: 'CPF',
+      document: '00000000000',
+      phone: null,
+    },
+    {
+      code: 'CLI-002',
+      name: 'Maria Silva',
+      documentType: 'CPF',
+      document: '12345678901',
+      phone: '11999990001',
+    },
+    {
+      code: 'CLI-003',
+      name: 'Farmácia Parceira LTDA',
+      documentType: 'CNPJ',
+      document: '12345678000199',
+      phone: '1133334444',
+    },
+  ];
+
+  for (const customer of customers) {
+    await prisma.customer.upsert({
+      where: { code: customer.code },
+      update: {
+        name: customer.name,
+        documentType: customer.documentType,
+        document: customer.document,
+        phone: customer.phone,
+        active: true,
+      },
+      create: customer,
+    });
+  }
+
   console.log(
-    `Seed OK: usuário ${email}, lookups e lotes de validade disponíveis.`,
+    `Seed OK: usuário ${email}, lookups, lotes e clientes de venda disponíveis.`,
   );
 }
 
