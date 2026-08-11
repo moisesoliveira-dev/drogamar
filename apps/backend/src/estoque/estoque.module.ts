@@ -48,10 +48,12 @@ import { PrismaStockLookupRepository } from './infrastructure/persistence/prisma
 import { PrismaStockLotRepository } from './infrastructure/persistence/prisma-stock-lot.repository';
 import { EstoqueController } from './presentation/estoque.controller';
 import { ExportacaoController } from './presentation/exportacao.controller';
+import { LojaOnlineController } from './presentation/loja-online.controller';
+import { OnlineStoreService } from './application/services/online-store.service';
 
 @Module({
   imports: [AuthModule],
-  controllers: [EstoqueController, ExportacaoController],
+  controllers: [EstoqueController, ExportacaoController, LojaOnlineController],
   providers: [
     ListStockItemsHandler,
     GetStockItemHandler,
@@ -73,6 +75,7 @@ import { ExportacaoController } from './presentation/exportacao.controller';
     CancelStockExportHandler,
     RetryStockExportHandler,
     StockExportProcessor,
+    OnlineStoreService,
     { provide: STOCK_ITEM_REPOSITORY, useClass: PrismaStockItemRepository },
     {
       provide: STOCK_LOOKUP_REPOSITORY,
