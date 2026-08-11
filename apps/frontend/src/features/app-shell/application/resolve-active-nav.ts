@@ -1,5 +1,10 @@
 import { appModules } from '../domain/nav.config'
-import type { ActiveNavState, NavItemConfig, NavModuleConfig } from '../domain/nav.types'
+import {
+  formatNavItemLabel,
+  type ActiveNavState,
+  type NavItemConfig,
+  type NavModuleConfig,
+} from '../domain/nav.types'
 
 function scoreMatch(pathname: string, path: string): number {
   if (pathname === path) return 1000 + path.length
@@ -47,10 +52,13 @@ export function resolveActiveNav(pathname: string): ActiveNavState {
   const item = resolveItem(module, pathname)
   const breadcrumbs =
     module.id === 'inicio'
-      ? [{ label: item?.label ?? 'Dashboard' }]
+      ? [{ label: item ? formatNavItemLabel(item) : 'Dashboard' }]
       : [
-          { label: module.label, path: module.basePath },
-          ...(item ? [{ label: item.label }] : []),
+          {
+            label: module.label,
+            path: module.items[0]?.path ?? module.basePath,
+          },
+          ...(item ? [{ label: formatNavItemLabel(item) }] : []),
         ]
 
   return { module, item, breadcrumbs }

@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { resolveActiveNav } from '../application/resolve-active-nav'
+import { formatNavItemLabel } from '../domain/nav.types'
 import { PageHeader } from './PageHeader'
 import styles from './ModulePlaceholderPage.module.css'
 
@@ -11,7 +12,9 @@ export function ModulePlaceholderPage() {
   const { pathname } = useLocation()
   const { module, item, breadcrumbs } = resolveActiveNav(pathname)
 
-  const title = item?.label ?? module?.label ?? 'Página'
+  const title = item
+    ? formatNavItemLabel(item)
+    : (module?.label ?? 'Página')
   const description =
     item?.description ??
     'Esta área estará disponível em uma próxima entrega.'

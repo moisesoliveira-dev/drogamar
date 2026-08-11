@@ -19,4 +19,18 @@ describe('resolveActiveNav', () => {
     expect(active.module?.id).toBe('inicio')
     expect(active.item?.path).toBe('/app')
   })
+
+  it('seleciona estoque/validade (F2) a partir da rota', () => {
+    const active = resolveActiveNav('/app/estoque/validade')
+    expect(active.module?.id).toBe('estoque')
+    expect(active.item?.id).toBe('alerta-validade')
+    expect(active.item?.code).toBe('F2')
+  })
+
+  it('usa F1 como fallback do estoque na rota base', () => {
+    const active = resolveActiveNav('/app/estoque')
+    expect(active.module?.id).toBe('estoque')
+    expect(active.item?.id).toBe('cadastro-itens')
+    expect(active.item?.code).toBe('F1')
+  })
 })

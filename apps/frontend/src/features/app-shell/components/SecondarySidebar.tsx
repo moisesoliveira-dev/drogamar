@@ -1,5 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import type { NavItemConfig, NavModuleConfig } from '../domain/nav.types'
+import {
+  formatNavItemLabel,
+  type NavItemConfig,
+  type NavModuleConfig,
+} from '../domain/nav.types'
 import styles from './SecondarySidebar.module.css'
 
 export type SecondarySidebarProps = {
@@ -29,6 +33,8 @@ export function SecondarySidebar({
       <ul className={styles.list}>
         {module.items.map((item) => {
           const isActive = item.id === activeItemId
+          const Icon = item.icon
+          const displayLabel = formatNavItemLabel(item)
           return (
             <li key={item.id}>
               <NavLink
@@ -39,10 +45,21 @@ export function SecondarySidebar({
                     .filter(Boolean)
                     .join(' ')
                 }
+                aria-label={displayLabel}
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => onNavigate?.(item)}
               >
-                {item.label}
+                {Icon ? (
+                  <span className={styles.icon} aria-hidden="true">
+                    <Icon size={16} />
+                  </span>
+                ) : null}
+                <span className={styles.label}>
+                  {item.code ? (
+                    <span className={styles.code}>{item.code}</span>
+                  ) : null}
+                  <span className={styles.text}>{item.label}</span>
+                </span>
               </NavLink>
             </li>
           )

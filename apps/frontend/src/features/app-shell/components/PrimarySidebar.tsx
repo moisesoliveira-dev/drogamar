@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import type { NavModuleConfig } from '../domain/nav.types'
+import { moduleEntryPath, type NavModuleConfig } from '../domain/nav.types'
 import styles from './PrimarySidebar.module.css'
 
 export type PrimarySidebarProps = {
@@ -22,7 +22,7 @@ export function PrimarySidebar({
           return (
             <li key={module.id}>
               <NavLink
-                to={module.basePath}
+                to={moduleEntryPath(module)}
                 end={module.basePath === '/app'}
                 className={() =>
                   [styles.item, isActive ? styles.active : '']

@@ -25,6 +25,30 @@ const ModulePlaceholderPage = lazy(() =>
   })),
 )
 
+const ItemsListContainer = lazy(() =>
+  import('./features/estoque-itens').then((m) => ({
+    default: m.ItemsListContainer,
+  })),
+)
+
+const ItemFormContainer = lazy(() =>
+  import('./features/estoque-itens').then((m) => ({
+    default: m.ItemFormContainer,
+  })),
+)
+
+const ItemDetailContainer = lazy(() =>
+  import('./features/estoque-itens').then((m) => ({
+    default: m.ItemDetailContainer,
+  })),
+)
+
+const ExpiryAlertsContainer = lazy(() =>
+  import('./features/estoque-validade').then((m) => ({
+    default: m.ExpiryAlertsContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -56,6 +80,14 @@ function RouteFallback() {
       Carregando…
     </main>
   )
+}
+
+function ItemCreatePage() {
+  return <ItemFormContainer mode="create" />
+}
+
+function ItemEditPage() {
+  return <ItemFormContainer mode="edit" />
 }
 
 export default function App() {
@@ -109,6 +141,50 @@ export default function App() {
               <Route
                 path="dashboard"
                 element={<Navigate to="/app" replace />}
+              />
+              <Route
+                path="estoque"
+                element={<Navigate to="/app/estoque/itens" replace />}
+              />
+              <Route
+                path="estoque/itens"
+                element={
+                  <Suspense fallback={null}>
+                    <ItemsListContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="estoque/itens/novo"
+                element={
+                  <Suspense fallback={null}>
+                    <ItemCreatePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="estoque/itens/:id"
+                element={
+                  <Suspense fallback={null}>
+                    <ItemDetailContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="estoque/itens/:id/editar"
+                element={
+                  <Suspense fallback={null}>
+                    <ItemEditPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="estoque/validade"
+                element={
+                  <Suspense fallback={null}>
+                    <ExpiryAlertsContainer />
+                  </Suspense>
+                }
               />
               <Route
                 path="*"
