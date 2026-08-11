@@ -16,6 +16,7 @@ export const exportTypeSchema = z.enum([
   'LOTS_EXPIRY',
   'CURRENT_STOCK',
   'CATEGORIES',
+  'ONLINE_STORE',
 ])
 
 export const exportFormatSchema = z.enum(['XLSX', 'CSV', 'PDF'])
@@ -118,6 +119,7 @@ export const TYPE_LABELS: Record<ExportType, string> = {
   LOTS_EXPIRY: 'Lotes e validade',
   CURRENT_STOCK: 'Estoque atual',
   CATEGORIES: 'Categorias',
+  ONLINE_STORE: 'Loja online',
 }
 
 export const FORMAT_LABELS: Record<ExportFormat, string> = {

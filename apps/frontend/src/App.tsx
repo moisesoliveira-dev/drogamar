@@ -55,6 +55,12 @@ const ExportacaoContainer = lazy(() =>
   })),
 )
 
+const LojaOnlineContainer = lazy(() =>
+  import('./features/estoque-loja-online').then((m) => ({
+    default: m.LojaOnlineContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -197,6 +203,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <ExportacaoContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="estoque/loja-online"
+                element={
+                  <Suspense fallback={null}>
+                    <LojaOnlineContainer />
                   </Suspense>
                 }
               />

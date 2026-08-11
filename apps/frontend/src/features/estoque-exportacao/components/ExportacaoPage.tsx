@@ -786,6 +786,52 @@ function renderFilters(
     )
   }
 
+  if (type === 'ONLINE_STORE') {
+    return (
+      <>
+        <TextField
+          label="Buscar"
+          value={String(filters.search ?? '')}
+          onChange={(e) => onFilterChange('search', e.target.value)}
+        />
+        <SelectField
+          label="Status"
+          value={String(filters.status ?? '')}
+          onChange={(e) => onFilterChange('status', e.target.value)}
+          placeholder="Todos"
+          options={[
+            { value: 'PUBLISHED', label: 'Publicado' },
+            { value: 'NOT_PUBLISHED', label: 'Não publicado' },
+            { value: 'PENDING', label: 'Pendente' },
+            { value: 'ERROR', label: 'Com erro' },
+            { value: 'UNAVAILABLE', label: 'Indisponível' },
+          ]}
+        />
+        <SelectField
+          label="Publicação"
+          value={String(filters.publish ?? '')}
+          onChange={(e) => onFilterChange('publish', e.target.value)}
+          placeholder="Todas"
+          options={[
+            { value: 'PUBLISHED', label: 'Publicado' },
+            { value: 'NOT_PUBLISHED', label: 'Não publicado' },
+          ]}
+        />
+        <SelectField
+          label="Sincronização"
+          value={String(filters.sync ?? '')}
+          onChange={(e) => onFilterChange('sync', e.target.value)}
+          placeholder="Todas"
+          options={[
+            { value: 'SYNCED', label: 'Sincronizado' },
+            { value: 'PENDING', label: 'Pendente' },
+            { value: 'ERROR', label: 'Com erro' },
+          ]}
+        />
+      </>
+    )
+  }
+
   return (
     <>
       <TextField
