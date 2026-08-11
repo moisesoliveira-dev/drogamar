@@ -1,1 +1,6 @@
 export { CarrinhoContainer } from './containers/CarrinhoContainer'
+export { addCartItemAction } from './application/carrinho.actions'
+export { VENDAS_CARRINHO_QUERY_KEY } from './domain/query-keys'
+export { mapCarrinhoError } from './domain/errors'
+export { formatMoney } from './domain/carrinho.schema'
+export type { SaleCart } from './domain/carrinho.schema'

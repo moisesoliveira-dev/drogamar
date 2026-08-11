@@ -15,10 +15,11 @@ import {
 } from '../application/carrinho.actions'
 import { useCarrinhoPermissions } from '../application/use-carrinho-permissions'
 import { mapCarrinhoError } from '../domain/errors'
+import { VENDAS_CARRINHO_QUERY_KEY } from '../domain/query-keys'
 import { CarrinhoPage } from '../components/CarrinhoPage'
 import { useCarrinhoUiStore } from '../stores/carrinho.store'
 
-const CART_KEY = ['vendas-carrinho'] as const
+const CART_KEY = VENDAS_CARRINHO_QUERY_KEY
 
 export function CarrinhoContainer() {
   const navigate = useNavigate()
