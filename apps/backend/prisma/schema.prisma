@@ -35,7 +35,8 @@ model User {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   refreshTokens RefreshToken[]
-  stockExports  StockExportJob[]
+  stockExports       StockExportJob[]
+  onlineStoreSyncJobs OnlineStoreSyncJob[]
 
   @@index([email])
   @@map("users")
@@ -156,6 +157,7 @@ model StockItem {
   updatedAt                DateTime        @updatedAt
 
   lots                     StockLot[]
+  onlineListings           OnlineStoreListing[]
 
   @@unique([code])
   @@unique([sku])
@@ -197,6 +199,7 @@ enum StockExportType {
   LOTS_EXPIRY
   CURRENT_STOCK
   CATEGORIES
+  ONLINE_STORE
 }
 
 enum StockExportFormat {
@@ -244,4 +247,119 @@ model StockExportJob {
   @@index([userId, createdAt])
   @@index([status])
   @@map("stock_export_jobs")
+}
+
+enum SalesChannelPlatform {
+  GENERIC
+  CUSTOM
+}
+
+enum SalesChannelConnectionStatus {
+  DISCONNECTED
+  CONNECTED
+  ERROR
+}
+
+enum OnlineListingPublishStatus {
+  NOT_PUBLISHED
+  PUBLISHED
+  UNAVAILABLE
+}
+
+enum OnlineListingSyncStatus {
+  SYNCED
+  PENDING
+  ERROR
+}
+
+enum OnlineStoreSyncJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+  CANCELLED
+}
+
+model SalesChannel {
+  id               String                        @id @default(cuid())
+  name             String
+  platform         SalesChannelPlatform          @default(GENERIC)
+  baseUrl          String?
+  connectionStatus SalesChannelConnectionStatus  @default(DISCONNECTED)
+  /// Hash/token opaco — nunca retornado ao frontend
+  credentialsHash  String?
+  hasCredentials   Boolean                       @default(false)
+  lastSyncAt       DateTime?
+  lastErrorMessage String?
+  isDefault        Boolean                       @default(true)
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+  listings         OnlineStoreListing[]
+  syncJobs         OnlineStoreSyncJob[]
+
+  @@index([connectionStatus])
+  @@map("sales_channels")
+}
+
+model OnlineStoreListing {
+  id                 String                     @id @default(cuid())
+  channelId          String
+  channel            SalesChannel               @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  itemId             String
+  item               StockItem                  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  commercialName     String?
+  shortDescription   String?
+  storeDescription   String?
+  storeCategory      String?
+  tags               String?
+  useErpPrice        Boolean                    @default(true)
+  priceOverride      Decimal?                   @db.Decimal(18, 4)
+  promoPrice         Decimal?                   @db.Decimal(18, 4)
+  promoStartsAt      DateTime?
+  promoEndsAt        DateTime?
+  publishStatus      OnlineListingPublishStatus @default(NOT_PUBLISHED)
+  syncStatus         OnlineListingSyncStatus    @default(PENDING)
+  publishedStockQty  Decimal?                   @db.Decimal(18, 4)
+  lastSyncedAt       DateTime?
+  lastErrorCode      String?
+  lastErrorMessage   String?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  @@unique([channelId, itemId])
+  @@index([publishStatus])
+  @@index([syncStatus])
+  @@index([itemId])
+  @@map("online_store_listings")
+}
+
+model OnlineStoreSyncJob {
+  id                String                   @id @default(cuid())
+  sequentialId      Int                      @unique @default(autoincrement())
+  channelId         String
+  channel           SalesChannel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syncProducts      Boolean                  @default(true)
+  syncStock         Boolean                  @default(true)
+  syncPrices        Boolean                  @default(true)
+  status            OnlineStoreSyncJobStatus @default(PENDING)
+  productsProcessed Int                      @default(0)
+  productsSuccess   Int                      @default(0)
+  productsError     Int                      @default(0)
+  stockUpdated      Int                      @default(0)
+  pricesUpdated     Int                      @default(0)
+  pendingCount      Int                      @default(0)
+  summaryJson       Json?
+  errorMessage      String?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  @@index([channelId, createdAt])
+  @@index([userId])
+  @@index([status])
+  @@map("online_store_sync_jobs")
 }
