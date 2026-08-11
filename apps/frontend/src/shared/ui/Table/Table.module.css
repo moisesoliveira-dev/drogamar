@@ -1,0 +1,123 @@
+.wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-white);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fm-muted);
+  border-bottom: 1px solid var(--fm-border);
+  background: var(--fm-surface);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--fm-text);
+  border-bottom: 1px solid var(--fm-border);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover {
+  background: var(--fm-surface);
+}
+
+.table tbody tr[data-clickable='true'] {
+  cursor: pointer;
+}
+
+.selected {
+  background: var(--fm-light) !important;
+}
+
+.right {
+  text-align: right;
+}
+
+.sortBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sortBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--fm-focus-ring);
+  border-radius: 2px;
+}
+
+.state {
+  padding: 32px 20px;
+  text-align: center;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  background: var(--fm-white);
+}
+
+.stateTitle {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-text);
+}
+
+.stateBody {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fm-muted);
+}
+
+.skeleton {
+  height: 40px;
+  margin: 8px 12px;
+  border-radius: var(--fm-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--fm-surface) 0%,
+    var(--fm-light) 50%,
+    var(--fm-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .table {
+    min-width: 560px;
+  }
+}

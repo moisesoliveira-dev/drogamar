@@ -1,0 +1,73 @@
+.wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--fm-border);
+  transition: background 120ms ease;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--fm-white);
+  box-shadow: var(--fm-shadow);
+  transition: transform 120ms ease;
+}
+
+.input:checked + .track {
+  background: var(--fm-mid);
+}
+
+.input:checked + .track .thumb {
+  transform: translateX(16px);
+}
+
+.input:focus-visible + .track {
+  box-shadow: var(--fm-focus-ring);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fm-text);
+}
+
+.description {
+  font-size: 12px;
+  color: var(--fm-muted);
+}
+
+.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

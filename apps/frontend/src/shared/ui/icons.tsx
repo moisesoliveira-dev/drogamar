@@ -281,3 +281,50 @@ export function CloseIcon(props: IconProps) {
     </BaseIcon>
   )
 }
+
+export function PackagePlusIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m12 3 8 4.5v4" />
+      <path d="M12 12 4 7.5v9L12 21l4-2.25" />
+      <path d="M12 12v9" />
+      <path d="m12 12 8-4.5" />
+      <path d="M17 14v6" />
+      <path d="M14 17h6" />
+    </BaseIcon>
+  )
+}
+
+export function CalendarAlertIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M8 3.5v3" />
+      <path d="M16 3.5v3" />
+      <path d="M3.5 10h17" />
+      <path d="M12 13v3" />
+      <path d="M12 18.5h.01" />
+    </BaseIcon>
+  )
+}
+
+export function FileDownIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z" />
+      <path d="M14 3v6h6" />
+      <path d="M12 12v5" />
+      <path d="m9.5 14.5 2.5 2.5 2.5-2.5" />
+    </BaseIcon>
+  )
+}
+
+export function ShoppingCartIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <circle cx="9" cy="20" r="1.2" />
+      <circle cx="17" cy="20" r="1.2" />
+      <path d="M3 4h2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h7.6a1.5 1.5 0 0 0 1.5-1.2L19.5 8H6.2" />
+    </BaseIcon>
+  )
+}

@@ -1,0 +1,70 @@
+.card {
+  background: var(--fm-white);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 14px 16px;
+  min-height: 88px;
+}
+
+.label {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fm-muted);
+}
+
+.value {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--fm-text);
+  line-height: 1.2;
+}
+
+.hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--fm-muted);
+}
+
+.danger .value {
+  color: var(--fm-danger);
+}
+
+.warn .value {
+  color: var(--fm-warn);
+}
+
+.success .value {
+  color: var(--fm-success);
+}
+
+.info .value {
+  color: var(--fm-mid);
+}
+
+.skeleton {
+  height: 88px;
+  border-radius: var(--fm-radius-md);
+  border: 1px solid var(--fm-border);
+  background: linear-gradient(
+    90deg,
+    var(--fm-surface) 0%,
+    var(--fm-light) 50%,
+    var(--fm-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
