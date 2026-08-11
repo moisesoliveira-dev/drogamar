@@ -1,0 +1,271 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section {
+  background: var(--fm-white);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fm-text);
+}
+
+.sectionHeader p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--fm-muted);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.typeCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.typeCard {
+  text-align: left;
+  border: 1px solid var(--fm-border);
+  background: var(--fm-white);
+  border-radius: var(--fm-radius-md);
+  padding: 12px;
+  cursor: pointer;
+  color: var(--fm-text);
+}
+
+.typeCard:hover {
+  background: var(--fm-surface);
+}
+
+.typeCardActive {
+  border-color: var(--fm-mid);
+  background: var(--fm-light);
+  box-shadow: inset 3px 0 0 var(--fm-gold);
+}
+
+.typeCard strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.typeCard span {
+  font-size: 11px;
+  color: var(--fm-muted);
+  line-height: 1.4;
+}
+
+.typeCard:focus-visible {
+  outline: none;
+  box-shadow: var(--fm-focus-ring);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.columnGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.columnGroup {
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 10px 12px;
+}
+
+.columnGroup h3 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fm-muted);
+}
+
+.columnList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px 12px;
+}
+
+.columnActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summaryLayout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.summaryBox {
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 12px;
+  background: var(--fm-surface);
+  font-size: 12px;
+  color: var(--fm-text);
+}
+
+.summaryBox dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 10px;
+}
+
+.summaryBox dt {
+  color: var(--fm-muted);
+}
+
+.summaryBox dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.activeJob {
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 14px;
+  background: var(--fm-light);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activeJobTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.activeJobMeta {
+  font-size: 12px;
+  color: var(--fm-muted);
+}
+
+.activeJobActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.historyActions {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  border: 1px solid var(--fm-border);
+  background: var(--fm-white);
+  color: var(--fm-text);
+  border-radius: var(--fm-radius-sm);
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.actionBtn:hover {
+  background: var(--fm-surface);
+}
+
+.actionBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--fm-focus-ring);
+}
+
+.empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--fm-muted);
+  font-size: 13px;
+}
+
+.empty strong {
+  display: block;
+  color: var(--fm-text);
+  margin-bottom: 4px;
+}
+
+.errorBanner {
+  border: 1px solid var(--fm-danger);
+  background: var(--fm-danger-bg);
+  color: var(--fm-danger);
+  border-radius: var(--fm-radius-md);
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.retentionNote {
+  font-size: 11px;
+  color: var(--fm-muted);
+}
+
+.mobileCards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobileCard {
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 12px;
+  background: var(--fm-white);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.desktopTable {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .grid2,
+  .grid3,
+  .summaryLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .desktopTable {
+    display: none;
+  }
+
+  .mobileCards {
+    display: flex;
+  }
+}
