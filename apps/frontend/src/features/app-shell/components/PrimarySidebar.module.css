@@ -1,0 +1,81 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--fm-dark);
+  color: var(--fm-white);
+  overflow: hidden;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  margin: 0;
+  padding: 10px 8px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  border: 0;
+  border-radius: var(--fm-radius-sm);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  position: relative;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fm-white);
+}
+
+.item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--fm-gold);
+  color: var(--fm-white);
+}
+
+.active {
+  background: rgba(184, 152, 106, 0.18);
+  color: var(--fm-white);
+  box-shadow: inset 3px 0 0 var(--fm-gold);
+}
+
+.tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 5px 8px;
+  border-radius: var(--fm-radius-sm);
+  background: var(--fm-text);
+  color: var(--fm-white);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 60;
+}
+
+.item:hover .tooltip,
+.item:focus-visible .tooltip {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .tooltip {
+    display: none;
+  }
+}

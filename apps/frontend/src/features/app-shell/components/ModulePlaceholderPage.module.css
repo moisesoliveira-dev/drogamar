@@ -1,0 +1,29 @@
+.panel {
+  background: var(--fm-white);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+  padding: 20px;
+}
+
+.kicker {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fm-muted);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fm-text);
+}
+
+.body {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fm-muted);
+  max-width: 40rem;
+}

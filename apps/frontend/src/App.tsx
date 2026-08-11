@@ -13,6 +13,18 @@ const LoginPageContainer = lazy(() =>
   })),
 )
 
+const AppShellContainer = lazy(() =>
+  import('./features/app-shell').then((m) => ({
+    default: m.AppShellContainer,
+  })),
+)
+
+const ModulePlaceholderPage = lazy(() =>
+  import('./features/app-shell').then((m) => ({
+    default: m.ModulePlaceholderPage,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -26,28 +38,6 @@ function PlaceholderPage({ title }: { title: string }) {
       }}
     >
       <p style={{ margin: 0, color: 'var(--fm-muted)' }}>{title}</p>
-    </main>
-  )
-}
-
-function AppHome() {
-  return (
-    <main
-      style={{
-        minHeight: '100svh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: 24,
-        background: 'var(--fm-surface)',
-        color: 'var(--fm-text)',
-      }}
-    >
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 22 }}>Área autenticada</h1>
-        <p style={{ margin: 0, color: 'var(--fm-muted)' }}>
-          Login concluído com sucesso.
-        </p>
-      </div>
     </main>
   )
 }
@@ -102,10 +92,33 @@ export default function App() {
               path="/app"
               element={
                 <ProtectedRoute>
-                  <AppHome />
+                  <Suspense fallback={<RouteFallback />}>
+                    <AppShellContainer />
+                  </Suspense>
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route
+                index
+                element={
+                  <Suspense fallback={null}>
+                    <ModulePlaceholderPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="dashboard"
+                element={<Navigate to="/app" replace />}
+              />
+              <Route
+                path="*"
+                element={
+                  <Suspense fallback={null}>
+                    <ModulePlaceholderPage />
+                  </Suspense>
+                }
+              />
+            </Route>
             <Route path="/" element={<Navigate to="/app" replace />} />
             <Route path="*" element={<Navigate to="/app" replace />} />
           </Routes>
