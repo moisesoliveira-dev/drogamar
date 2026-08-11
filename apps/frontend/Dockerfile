@@ -6,11 +6,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/backend/package.json ./apps/backend/
+COPY packages ./packages
 
-RUN npm ci -w @drogamar/frontend
+RUN npm ci
 
 COPY apps/frontend ./apps/frontend
-RUN npm run build -w @drogamar/frontend
+
+WORKDIR /app/apps/frontend
+RUN npm run build
 
 # Serve
 FROM nginx:1.27-alpine AS production

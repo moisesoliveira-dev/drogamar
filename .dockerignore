@@ -3,6 +3,7 @@ node_modules
 **/dist
 **/coverage
 **/build
+**/*.tsbuildinfo
 .git
 .gitignore
 *.md
@@ -14,8 +15,9 @@ node_modules
 *.log
 .temp
 .tmp
-test
+apps/backend/test
 **/*.spec.ts
+**/*.test.ts
+**/*.test.tsx
 apps/frontend/docker-compose.yml
 apps/backend/docker-compose.yml
-packages
