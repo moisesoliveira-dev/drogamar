@@ -20,6 +20,13 @@ Separe mentalmente (e no código) em fatias independentes, nesta ordem típica:
 7. `style/responsive` — layout e responsividade
 8. `fix` — correções isoladas
 
+## Mensagens
+
+- Preferir **português**. Misturar com inglês é ok (ex.: `feat(frontend): adiciona tela de login`).
+- Prefixo convencional (`feat`, `fix`, `chore`, escopo) pode ficar em inglês; a descrição deve ser clara em português.
+- Focar no *porquê*, 1–2 frases no máximo.
+- Não reescrever commits antigos só para traduzir — vale a partir dos próximos.
+
 ## Regras
 
 - Uma intenção = uma fatia. Não misture Prisma + tela + Docker no mesmo bloco se puder evitar.
