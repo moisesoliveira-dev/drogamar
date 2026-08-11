@@ -1,25 +1,33 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AuthSession } from '../infrastructure/auth.api'
+import type { AuthUser } from '../domain/login.schema'
 
 type AuthState = {
-  session: AuthSession | null
+  user: AuthUser | null
+  bootstrapped: boolean
   rememberedEmail: string
-  setSession: (session: AuthSession | null) => void
+  setUser: (user: AuthUser | null) => void
+  setBootstrapped: (value: boolean) => void
   setRememberedEmail: (email: string) => void
   clearRememberedEmail: () => void
-  logout: () => void
+  logoutLocal: () => void
 }
 
+/**
+ * Estado de UI/sessão.
+ * NÃO armazena tokens/senhas — cookies HttpOnly cuidam da autenticação real.
+ */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      session: null,
+      user: null,
+      bootstrapped: false,
       rememberedEmail: '',
-      setSession: (session) => set({ session }),
+      setUser: (user) => set({ user }),
+      setBootstrapped: (bootstrapped) => set({ bootstrapped }),
       setRememberedEmail: (email) => set({ rememberedEmail: email }),
       clearRememberedEmail: () => set({ rememberedEmail: '' }),
-      logout: () => set({ session: null }),
+      logoutLocal: () => set({ user: null }),
     }),
     {
       name: 'drogamar.auth',

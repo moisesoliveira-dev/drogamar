@@ -1,16 +1,14 @@
 import {
   loginSchema,
+  type AuthUser,
   type LoginFieldErrors,
   type LoginInput,
 } from '../domain/login.schema'
-import {
-  loginRequest,
-  type AuthSession,
-} from '../infrastructure/auth.api'
+import { loginRequest } from '../infrastructure/auth.api'
 import { mapAuthError } from './map-auth-error'
 
 export type LoginActionResult =
-  | { ok: true; session: AuthSession; data: LoginInput }
+  | { ok: true; user: AuthUser; data: LoginInput }
   | {
       ok: false
       fieldErrors: LoginFieldErrors | null
@@ -35,8 +33,8 @@ export async function loginAction(input: unknown): Promise<LoginActionResult> {
   }
 
   try {
-    const session = await loginRequest(parsed.data)
-    return { ok: true, session, data: parsed.data }
+    const user = await loginRequest(parsed.data)
+    return { ok: true, user, data: parsed.data }
   } catch (error) {
     return {
       ok: false,

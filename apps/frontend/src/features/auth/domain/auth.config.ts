@@ -1,9 +1,17 @@
 /**
- * Flags de integração de autenticação.
- * Ative `googleOAuthEnabled` apenas quando o fluxo OAuth existir no backend.
+ * Config de autenticação do frontend.
+ * Tokens ficam em cookies HttpOnly definidos pelo backend — nunca em localStorage.
  */
 export const authConfig = {
   googleOAuthEnabled: false,
-  /** Endpoint futuro — não inventar URL até o backend expor o contrato. */
-  loginPath: null as string | null,
+  microsoftOAuthEnabled: false,
+  loginPath: '/api/auth/login',
+  refreshPath: '/api/auth/refresh',
+  logoutPath: '/api/auth/logout',
+  mePath: '/api/auth/me',
+  /** Rota padrão após login quando não há redirect seguro. */
+  defaultAuthenticatedPath: '/app',
+  /** Rotas públicas relacionadas à conta (ainda sem backend completo). */
+  recoverPasswordPath: '/recuperar-senha',
+  createAccountPath: '/criar-conta',
 } as const

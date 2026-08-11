@@ -1,18 +1,31 @@
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { loginAction } from '../application/login.action'
+import { getSafeRedirect } from '../application/safe-redirect'
 import { LoginForm, type LoginFormValues } from '../components/LoginForm'
 import { LoginPage } from '../components/LoginPage'
 import { authConfig } from '../domain/auth.config'
 import type { LoginFieldErrors } from '../domain/login.schema'
 import { useAuthStore } from '../stores/auth.store'
+import { GuestOnlyRoute } from './AuthRouteGuards'
 
 export function LoginPageContainer() {
+  return (
+    <GuestOnlyRoute>
+      <LoginPageView />
+    </GuestOnlyRoute>
+  )
+}
+
+function LoginPageView() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const rememberedEmail = useAuthStore((state) => state.rememberedEmail)
   const setRememberedEmail = useAuthStore((state) => state.setRememberedEmail)
-  const clearRememberedEmail = useAuthStore((state) => state.clearRememberedEmail)
-  const setSession = useAuthStore((state) => state.setSession)
+  const clearRememberedEmail = useAuthStore(
+    (state) => state.clearRememberedEmail,
+  )
+  const setUser = useAuthStore((state) => state.setUser)
 
   const loginMutation = useMutation({
     mutationFn: async (values: LoginFormValues) => loginAction(values),
@@ -25,8 +38,12 @@ export function LoginPageContainer() {
         clearRememberedEmail()
       }
 
-      setSession(result.session)
-      navigate('/', { replace: true })
+      setUser(result.user)
+      const target = getSafeRedirect(
+        searchParams.get('redirect'),
+        authConfig.defaultAuthenticatedPath,
+      )
+      navigate(target, { replace: true })
     },
   })
 
@@ -45,7 +62,10 @@ export function LoginPageContainer() {
         fieldErrors={fieldErrors}
         formError={formError}
         showGoogleOAuth={authConfig.googleOAuthEnabled}
+        recoverPasswordPath={authConfig.recoverPasswordPath}
+        createAccountPath={authConfig.createAccountPath}
         onSubmit={(values) => {
+          if (loginMutation.isPending) return
           loginMutation.reset()
           loginMutation.mutate(values)
         }}

@@ -27,6 +27,8 @@ export type LoginFormProps = {
   onSubmit: (values: LoginFormValues) => void
   showGoogleOAuth?: boolean
   onGoogleContinue?: () => void
+  recoverPasswordPath?: string
+  createAccountPath?: string
 }
 
 export function LoginForm({
@@ -37,6 +39,8 @@ export function LoginForm({
   onSubmit,
   showGoogleOAuth = false,
   onGoogleContinue,
+  recoverPasswordPath = '/recuperar-senha',
+  createAccountPath = '/criar-conta',
 }: LoginFormProps) {
   const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
@@ -45,11 +49,17 @@ export function LoginForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (loading) return
     onSubmit({ email, password, rememberMe })
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+    <form
+      className={styles.form}
+      onSubmit={handleSubmit}
+      noValidate
+      aria-busy={loading || undefined}
+    >
       <header className={styles.header}>
         <div className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true">
@@ -64,14 +74,18 @@ export function LoginForm({
         <p className={styles.subtitle}>Entre na sua conta para continuar.</p>
       </header>
 
-      {formError ? <Alert variant="danger">{formError}</Alert> : null}
+      {formError ? (
+        <Alert variant="danger">
+          <span className={styles.errorWithIcon}>{formError}</span>
+        </Alert>
+      ) : null}
 
       <div className={styles.fields}>
         <TextField
           label="E-mail"
           name="email"
           type="email"
-          autoComplete="email"
+          autoComplete="username"
           inputMode="email"
           placeholder="seu@email.com"
           value={email}
@@ -98,6 +112,7 @@ export function LoginForm({
               className={styles.iconButton}
               onClick={() => setShowPassword((value) => !value)}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              aria-pressed={showPassword}
               disabled={loading}
             >
               {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
@@ -113,7 +128,7 @@ export function LoginForm({
           disabled={loading}
           onChange={(event) => setRememberMe(event.target.checked)}
         />
-        <Link className={styles.link} to="/recuperar-senha">
+        <Link className={styles.link} to={recoverPasswordPath}>
           Esqueci minha senha
         </Link>
       </div>
@@ -124,6 +139,7 @@ export function LoginForm({
         size="lg"
         fullWidth
         loading={loading}
+        disabled={loading}
       >
         {loading ? 'Entrando…' : 'Entrar'}
       </Button>
@@ -148,7 +164,7 @@ export function LoginForm({
 
       <p className={styles.footer}>
         Ainda não tem uma conta?{' '}
-        <Link className={styles.linkStrong} to="/criar-conta">
+        <Link className={styles.linkStrong} to={createAccountPath}>
           Criar conta
         </Link>
       </p>
