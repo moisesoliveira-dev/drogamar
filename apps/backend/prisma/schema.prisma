@@ -13,14 +13,27 @@ enum UserStatus {
   BLOCKED
 }
 
+enum StockItemStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum StockItemType {
+  PRODUCT
+  RAW_MATERIAL
+  PACKAGING
+  SERVICE
+  OTHER
+}
+
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  name         String
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  status        UserStatus     @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   refreshTokens RefreshToken[]
 
   @@index([email])
@@ -28,14 +41,152 @@ model User {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  tokenHash String   @unique
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   revokedAt DateTime?
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model StockCategory {
+  id        String      @id @default(cuid())
+  name      String
+  active    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     StockItem[]
+
+  @@unique([name])
+  @@map("stock_categories")
+}
+
+model StockBrand {
+  id        String      @id @default(cuid())
+  name      String
+  active    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     StockItem[]
+
+  @@unique([name])
+  @@map("stock_brands")
+}
+
+model StockLocation {
+  id        String      @id @default(cuid())
+  name      String
+  active    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     StockItem[]
+  lots      StockLot[]
+
+  @@unique([name])
+  @@map("stock_locations")
+}
+
+model UnitOfMeasure {
+  id           String      @id @default(cuid())
+  code         String
+  label        String
+  active       Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  measureItems StockItem[] @relation("ItemMeasureUnit")
+  purchaseItems StockItem[] @relation("ItemPurchaseUnit")
+  saleItems    StockItem[] @relation("ItemSaleUnit")
+
+  @@unique([code])
+  @@map("units_of_measure")
+}
+
+model StockItem {
+  id                       String          @id @default(cuid())
+  code                     String
+  description              String
+  sku                      String?
+  barcode                  String?
+  status                   StockItemStatus @default(ACTIVE)
+  itemType                 StockItemType   @default(PRODUCT)
+
+  categoryId               String?
+  category                 StockCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brandId                  String?
+  brand                    StockBrand?     @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  locationId               String?
+  location                 StockLocation?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  measureUnitId            String?
+  measureUnit              UnitOfMeasure?  @relation("ItemMeasureUnit", fields: [measureUnitId], references: [id], onDelete: SetNull)
+  purchaseUnitId           String?
+  purchaseUnit             UnitOfMeasure?  @relation("ItemPurchaseUnit", fields: [purchaseUnitId], references: [id], onDelete: SetNull)
+  saleUnitId               String?
+  saleUnit                 UnitOfMeasure?  @relation("ItemSaleUnit", fields: [saleUnitId], references: [id], onDelete: SetNull)
+  purchaseToMeasureFactor  Decimal?        @db.Decimal(18, 6)
+  saleToMeasureFactor      Decimal?        @db.Decimal(18, 6)
+
+  trackStock               Boolean         @default(true)
+  minStock                 Decimal?        @db.Decimal(18, 4)
+  maxStock                 Decimal?        @db.Decimal(18, 4)
+  currentStock             Decimal         @default(0) @db.Decimal(18, 4)
+  trackLot                 Boolean         @default(false)
+  trackExpiry              Boolean         @default(false)
+
+  costPrice                Decimal?        @db.Decimal(18, 4)
+  salePrice                Decimal?        @db.Decimal(18, 4)
+
+  ncm                      String?
+  cest                     String?
+  origin                   String?
+  defaultCfop              String?
+  fiscalUnit               String?
+
+  complementaryDescription String?
+  notes                    String?
+  manufacturer             String?
+  mainSupplier             String?
+
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  lots                     StockLot[]
+
+  @@unique([code])
+  @@unique([sku])
+  @@unique([barcode])
+  @@index([description])
+  @@index([status])
+  @@index([itemType])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([locationId])
+  @@index([measureUnitId])
+  @@map("stock_items")
+}
+
+model StockLot {
+  id                 String         @id @default(cuid())
+  itemId             String
+  item               StockItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  lotNumber          String
+  manufacturingDate  DateTime?      @db.Date
+  expiryDate         DateTime       @db.Date
+  quantity           Decimal        @db.Decimal(18, 4)
+  locationId         String?
+  location           StockLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  enteredAt          DateTime       @default(now())
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([itemId, lotNumber])
+  @@index([expiryDate])
+  @@index([itemId])
+  @@index([locationId])
+  @@index([lotNumber])
+  @@map("stock_lots")
 }

@@ -18,8 +18,57 @@ async function main() {
     create: { email, passwordHash, name, status: 'ACTIVE' },
   });
 
-  // Não logar a senha
-  console.log(`Seed OK: usuário ${email} disponível.`);
+  for (const [code, label] of [
+    ['UN', 'Unidade'],
+    ['KG', 'Quilograma'],
+    ['G', 'Grama'],
+    ['L', 'Litro'],
+    ['ML', 'Mililitro'],
+    ['CX', 'Caixa'],
+    ['PC', 'Peça'],
+  ] as const) {
+    await prisma.unitOfMeasure.upsert({
+      where: { code },
+      update: { label, active: true },
+      create: { code, label, active: true },
+    });
+  }
+
+  for (const categoryName of [
+    'Matéria-prima',
+    'Embalagens',
+    'Produtos acabados',
+    'Insumos',
+  ]) {
+    await prisma.stockCategory.upsert({
+      where: { name: categoryName },
+      update: { active: true },
+      create: { name: categoryName, active: true },
+    });
+  }
+
+  for (const brandName of ['Genérico', 'Própria', 'Terceiros']) {
+    await prisma.stockBrand.upsert({
+      where: { name: brandName },
+      update: { active: true },
+      create: { name: brandName, active: true },
+    });
+  }
+
+  for (const locationName of [
+    'Almoxarifado',
+    'Farmácia',
+    'Produção',
+    'Quarentena',
+  ]) {
+    await prisma.stockLocation.upsert({
+      where: { name: locationName },
+      update: { active: true },
+      create: { name: locationName, active: true },
+    });
+  }
+
+  console.log(`Seed OK: usuário ${email} e lookups de estoque disponíveis.`);
 }
 
 main()
