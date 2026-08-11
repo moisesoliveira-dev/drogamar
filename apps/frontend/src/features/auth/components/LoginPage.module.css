@@ -1,0 +1,53 @@
+.page {
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: var(--fm-surface);
+  overflow-x: hidden;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(46, 107, 82, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(184, 152, 106, 0.12), transparent 50%);
+  pointer-events: none;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+}
+
+.card {
+  width: 100%;
+  background: var(--fm-white);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-lg);
+  box-shadow: var(--fm-shadow-lg);
+  padding: 32px 28px;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px;
+    align-items: stretch;
+  }
+
+  .main {
+    max-width: none;
+    margin: auto 0;
+  }
+
+  .card {
+    padding: 24px 18px;
+    border-radius: 10px;
+  }
+}

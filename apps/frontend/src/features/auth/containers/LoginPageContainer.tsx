@@ -1,0 +1,55 @@
+import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { loginAction } from '../application/login.action'
+import { LoginForm, type LoginFormValues } from '../components/LoginForm'
+import { LoginPage } from '../components/LoginPage'
+import { authConfig } from '../domain/auth.config'
+import type { LoginFieldErrors } from '../domain/login.schema'
+import { useAuthStore } from '../stores/auth.store'
+
+export function LoginPageContainer() {
+  const navigate = useNavigate()
+  const rememberedEmail = useAuthStore((state) => state.rememberedEmail)
+  const setRememberedEmail = useAuthStore((state) => state.setRememberedEmail)
+  const clearRememberedEmail = useAuthStore((state) => state.clearRememberedEmail)
+  const setSession = useAuthStore((state) => state.setSession)
+
+  const loginMutation = useMutation({
+    mutationFn: async (values: LoginFormValues) => loginAction(values),
+    onSuccess: (result) => {
+      if (!result.ok) return
+
+      if (result.data.rememberMe) {
+        setRememberedEmail(result.data.email)
+      } else {
+        clearRememberedEmail()
+      }
+
+      setSession(result.session)
+      navigate('/', { replace: true })
+    },
+  })
+
+  const actionResult = loginMutation.data
+  const fieldErrors: LoginFieldErrors | null =
+    actionResult && !actionResult.ok ? actionResult.fieldErrors : null
+  const formError =
+    actionResult && !actionResult.ok ? actionResult.formError : null
+
+  return (
+    <LoginPage>
+      <LoginForm
+        key={rememberedEmail || 'login'}
+        initialEmail={rememberedEmail}
+        loading={loginMutation.isPending}
+        fieldErrors={fieldErrors}
+        formError={formError}
+        showGoogleOAuth={authConfig.googleOAuthEnabled}
+        onSubmit={(values) => {
+          loginMutation.reset()
+          loginMutation.mutate(values)
+        }}
+      />
+    </LoginPage>
+  )
+}
