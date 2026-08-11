@@ -1,0 +1,67 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.search {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  background: var(--fm-white);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md);
+}
+
+.filterActions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  border: 1px solid var(--fm-border);
+  background: var(--fm-white);
+  color: var(--fm-text);
+  border-radius: var(--fm-radius-sm);
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.actionBtn:hover {
+  background: var(--fm-surface);
+}
+
+.actionBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--fm-focus-ring);
+}
+
+.danger {
+  color: var(--fm-danger);
+}
+
+.muted {
+  color: var(--fm-muted);
+  font-size: 12px;
+}
