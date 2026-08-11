@@ -1,0 +1,64 @@
+---
+description: Backend NestJS com DDD, Hexagonal, CQRS, Specification e Domain Events
+globs: apps/backend/**
+alwaysApply: false
+---
+
+# Backend — Arquitetura
+
+Padrões obrigatórios: **DDD**, **Hexagonal**, **CQRS**, **Specification**, **Observer/Domain Events**. Persistência com **Prisma**.
+
+## Estrutura por bounded context / módulo
+
+```
+apps/backend/src/<module>/
+  domain/           # entidades, VOs, aggregates, domain events, specs, ports (interfaces)
+  application/      # commands, queries, handlers, DTOs de app
+  infrastructure/   # Prisma repos, adapters, mappers, event bus
+  presentation/     # controllers HTTP, guards, presenters
+  <module>.module.ts
+```
+
+## Hexagonal
+
+- `domain` não importa Nest, Prisma, HTTP nem frameworks.
+- Ports no domain (`IUserRepository`, `IEventBus`); adapters em `infrastructure`.
+- Application orquestra; Presentation só traduz HTTP ↔ application.
+
+## CQRS
+
+- Writes: `Command` + `CommandHandler`.
+- Reads: `Query` + `QueryHandler` (projeções/leitura otimizada; pode usar Prisma read models).
+- Não misturar regras de escrita dentro de queries.
+
+## Specification Pattern
+
+- Encapsular regras de negócio reutilizáveis em `domain/specifications/*`.
+- Specs compostas (`and`/`or`/`not`) para filtros e invariantes.
+- Repositórios aceitam specs (ou traduzem spec → Prisma `where`).
+
+## Domain Events (Observer)
+
+- Aggregates registram eventos (`SomethingHappened`).
+- Após persistir, publicar via event bus; handlers em application/infrastructure reagem.
+- Sem acoplar aggregates a side-effects diretos (e-mail, fila, etc.).
+
+## Modularidade Nest
+
+- Um `XxxModule` por contexto; exportar só facades/ports necessários.
+- Proibido feature A importar internals de feature B.
+
+## Exemplo rápido
+
+```typescript
+// domain — port
+export interface FormulaRepository {
+  save(formula: Formula): Promise<void>;
+  findSatisfying(spec: Specification<Formula>): Promise<Formula[]>;
+}
+
+// application — command
+export class CreateFormulaCommand {
+  constructor(public readonly nome: string) {}
+}
+```

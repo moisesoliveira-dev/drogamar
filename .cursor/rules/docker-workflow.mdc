@@ -1,0 +1,31 @@
+---
+description: Quando e como atualizar Docker no monorepo Drogamar
+globs: "**/Dockerfile*,**/docker-compose*.yml,**/.env*,**/schema.prisma,**/prisma/**"
+alwaysApply: false
+---
+
+# Docker
+
+Stack: `docker-compose.yml` na raiz (frontend + backend + PostgreSQL). Contextos de build = raiz do monorepo.
+
+## Atualizar Docker quando
+
+- Mudou dependências npm relevantes ao runtime/build
+- Mudou portas, env, `DATABASE_URL`, Prisma
+- Mudou scripts de build ou saída (`dist`)
+- Novo serviço ou volume necessário
+
+## Validação
+
+```bash
+npm run docker:up
+# ou
+docker compose up --build
+```
+
+Conferir: Postgres healthy, backend sobe, frontend responde, app conecta no DB.
+
+## Não fazer
+
+- Commitar secrets no compose; usar `.env` + `.env.example`
+- Assumir `package-lock` dentro de `apps/*` — o lock é o da raiz

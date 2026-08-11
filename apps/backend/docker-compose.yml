@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
     container_name: drogamar-backend
     ports:
       - "${BACKEND_PORT:-3000}:3000"

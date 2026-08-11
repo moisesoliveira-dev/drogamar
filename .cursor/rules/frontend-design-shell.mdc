@@ -1,0 +1,60 @@
+---
+description: Estilização obrigatória baseada em farmacia_manipulacao_shell.html
+globs: apps/frontend/**
+alwaysApply: false
+---
+
+# Frontend — Design System (shell)
+
+**Fonte da verdade visual:** `farmacia_manipulacao_shell.html` na raiz do monorepo.
+
+Toda UI do frontend deve seguir esse shell (tokens, tipografia, densidades, componentes e layout). Não inventar paleta, raios ou padrões paralelos.
+
+## Tokens CSS (`--fm-*`)
+
+Replicar em CSS global / design tokens do app:
+
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `--fm-dark` | `#1A3D2E` | Sidebar, CTA primário, accent de métrica |
+| `--fm-mid` | `#2E6B52` | Links/ações secundárias, barras OK |
+| `--fm-light` | `#EDF4F0` | Fundos suaves verdes |
+| `--fm-gold` | `#B8986A` | Accent ativo, alertas, role pill |
+| `--fm-gold-light` | `#F5EFE4` | Fundo dourado suave |
+| `--fm-text` | `#1C1C1C` | Texto principal |
+| `--fm-muted` | `#7A7A7A` | Labels, path, placeholders |
+| `--fm-border` | `#E2E6E4` | Bordas de card/topbar/inputs |
+| `--fm-white` | `#FFFFFF` | Superfícies |
+| `--fm-surface` | `#F7F8F7` | Fundo da página / hover de tabela |
+| `--fm-danger` / `-bg` | `#C0392B` / `#FDECEA` | Erro / estoque baixo |
+| `--fm-success` / `-bg` | `#1A6B3A` / `#EDF5F0` | Sucesso |
+| `--fm-warn` / `-bg` | `#8A6000` / `#FBF5E6` | Aviso |
+
+Proibido hex solto repetido — usar sempre `var(--fm-*)`.
+
+## Layout do produto
+
+- App shell: sidebar escura (`220px`) + main clara.
+- Topbar: `52px`, borda inferior `--fm-border`, título 14px semibold.
+- Content: padding `20px 24px`, gap `16px`, fundo `--fm-surface`.
+- Cards: branco, borda `--fm-border`, radius `8px` (shell interno `12px` só no frame).
+- Métricas: grid 4 colunas, card com label uppercase 10px + valor leve 22px.
+- Tabelas: th uppercase muted 10px; td 12px; hover `--fm-surface`.
+- Status: pills uppercase (`pill-ok` / `pill-warn` / `pill-low`).
+- CTA primário: fundo `--fm-dark`, radius `6px`, texto branco 12px.
+- Nav ativa: borda esquerda dourada + texto branco.
+
+## Tipografia e densidade
+
+- Fonte do shell: Inter / system-ui (exceção de marca deste produto — manter alinhado ao HTML).
+- Labels de seção: uppercase, letter-spacing amplo, tamanho pequeno (9–10px).
+- UI densa e profissional (farmácia), não “marketing landing”.
+
+## Ao implementar
+
+1. Abrir/consultar `farmacia_manipulacao_shell.html` antes de criar tela ou componente visual.
+2. Extrair padrões para `shared/ui` (Button, Card, Badge/Pill, MetricCard, AlertBanner, Table…).
+3. Conferir espaçamento, radius e tamanhos contra o shell.
+4. Só depois aplicar responsividade.
+
+Se DESIGN.md / Impeccable conflitar com o shell, **prevalece o shell**.

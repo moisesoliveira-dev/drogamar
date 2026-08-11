@@ -1,0 +1,29 @@
+---
+description: Mudanças em fatias commitáveis e commits bem definidos
+alwaysApply: true
+---
+
+# Commits atômicos
+
+O usuário deve conseguir revisar e commitar em passos claros — nunca um “dump” monolítico.
+
+## Como organizar o trabalho
+
+Separe mentalmente (e no código) em fatias independentes, nesta ordem típica:
+
+1. `chore/infra` — Docker, env, tooling, monorepo
+2. `feat(backend): domain` — entidades, VOs, events, specs (sem infra)
+3. `feat(backend): application` — commands/queries CQRS
+4. `feat(backend): infra` — Prisma, adapters, controllers
+5. `feat(frontend): ui-kit` — componentes reutilizáveis
+6. `feat(frontend): feature-x` — uma feature por vez
+7. `style/responsive` — layout e responsividade
+8. `fix` — correções isoladas
+
+## Regras
+
+- Uma intenção = uma fatia. Não misture Prisma + tela + Docker no mesmo bloco se puder evitar.
+- Ao receber “faça commit”, proponha **vários commits** com mensagens focadas no *porquê*, no estilo do repo.
+- Nunca commit automático sem pedido explícito.
+- Não incluir `.env`, secrets ou artefatos gerados.
+- Se a mudança já misturou assuntos, avise e sugira como fatiar antes de commitar.

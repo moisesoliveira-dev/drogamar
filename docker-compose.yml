@@ -21,8 +21,8 @@ services:
 
   backend:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/backend/Dockerfile
     container_name: drogamar-backend
     ports:
       - "${BACKEND_PORT:-3000}:3000"
@@ -39,8 +39,8 @@ services:
 
   frontend:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/frontend/Dockerfile
     container_name: drogamar-frontend
     ports:
       - "${FRONTEND_PORT:-8080}:80"

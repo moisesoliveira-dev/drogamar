@@ -1,0 +1,34 @@
+---
+description: Workflow obrigatório, modularidade e tom de código humano do monorepo Drogamar
+alwaysApply: true
+---
+
+# Drogamar — Core
+
+Monorepo npm workspaces: `apps/backend` (NestJS + Prisma) e `apps/frontend` (React/Vite). Pacotes compartilhados em `packages/`.
+
+## Tom do código
+
+Escreva como um desenvolvedor sênior do time: claro, direto, sem over-engineering, sem comentários óbvios, sem refactors oportunistas. O resultado deve parecer feito pelo autor do projeto — não por IA genérica.
+
+## Modularidade
+
+- Cada domínio/feature é um módulo isolado (backend e frontend).
+- Proibido acoplar features via imports cruzados profundos; use contratos públicos (facades, ports, events).
+- Preferir muitos módulos pequenos e coesos a “god modules”.
+
+## Fluxo obrigatório de qualquer mudança
+
+Execute nesta ordem e não pule etapas:
+
+1. **Atualizar** backend e/ou frontend conforme a demanda.
+2. **Persistência dinâmica** — perguntar-se: precisa de Prisma schema/migration, seed, config, feature flag ou dado dinâmico? Se sim, persistir de forma evolutiva (migration), nunca hardcode de estrutura de negócio.
+3. **Docker** — se mudou deps, ports, env, Prisma ou build, atualizar Dockerfile/compose/`.env.example` e validar com `npm run docker:up` (ou o compose afetado).
+4. **Layout** — conferir hierarquia, alinhamento, espaçamento e tamanho dos elementos contra `farmacia_manipulacao_shell.html` (tokens `--fm-*`).
+5. **Responsividade** — ajustar mobile/tablet/desktop por último.
+
+## Escopo
+
+- Só altere o necessário para a tarefa.
+- Não edite markdown/docs a menos que pedido.
+- Commits só quando o usuário pedir; estruture o trabalho em fatias commitáveis (ver rule de commits).

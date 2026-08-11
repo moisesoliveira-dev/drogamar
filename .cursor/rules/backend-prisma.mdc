@@ -1,0 +1,42 @@
+---
+description: Prisma como persistência do backend — schema, migrations e adapters
+globs: apps/backend/**/*.{ts,prisma}
+alwaysApply: false
+---
+
+# Backend — Prisma
+
+Prisma é a única ORM/persistência do backend.
+
+## Onde vive
+
+- Schema: `apps/backend/prisma/schema.prisma`
+- Migrations versionadas em `apps/backend/prisma/migrations/`
+- `PrismaClient` só em `infrastructure` (adapter); domain nunca importa `@prisma/client`
+
+## Regras
+
+- Modelos Prisma ≠ entidades de domínio. Use mappers `infrastructure/persistence/mappers`.
+- Toda mudança de estrutura de dados → migration (`prisma migrate`), nunca só `db push` em fluxo compartilhado/prod.
+- Sistema dinâmico: preferir dados/config persistidos a hardcode (tabelas de config, status, tipos).
+- `DATABASE_URL` via env (Docker Compose já injeta).
+- Após alterar schema: atualizar Docker se necessário e validar migrate no ambiente containerizado.
+
+## Adapter
+
+```typescript
+// infrastructure/persistence/prisma-formula.repository.ts
+@Injectable()
+export class PrismaFormulaRepository implements FormulaRepository {
+  constructor(private readonly prisma: PrismaService) {}
+  // map Prisma <-> Domain aqui
+}
+```
+
+## Checklist ao persistir algo novo
+
+1. Atualizar `schema.prisma`
+2. Criar migration
+3. Atualizar mapper + repository adapter
+4. Expor via application (command/query)
+5. Conferir `.env.example` e compose se env mudou

@@ -1,0 +1,56 @@
+---
+description: Padrão de componentes reutilizáveis do frontend Drogamar
+globs: apps/frontend/src/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# Frontend — Componentes reutilizáveis
+
+## Onde criar
+
+| Tipo | Local |
+|------|--------|
+| Primativos / design system | `src/shared/ui/<Nome>/` |
+| Específico de feature | `features/<feature>/components/` |
+| Container com dados | `features/<feature>/containers/` |
+
+## Contrato de um shared UI
+
+```
+shared/ui/Button/
+  Button.tsx
+  Button.module.css   # ou tokens CSS do design system
+  Button.types.ts
+  index.ts
+```
+
+## Regras
+
+- API de props explícita e estável (`variant`, `size`, `disabled`, `loading`).
+- Sem fetch, sem React Query, sem Zustand dentro de `shared/ui`.
+- Acessível por padrão (`button`, labels, `aria-*` quando necessário).
+- Estilos via tokens `--fm-*` de `farmacia_manipulacao_shell.html` (rule `frontend-design-shell`) — sem hex soltos repetidos.
+- Aparência (radius, padding, tipografia) deve espelhar os blocos do shell (botão = `.topbar-action`, card = `.card`, pill = `.status-pill`, etc.).
+- Composition over configuration: preferir `children`/`slots` a dezenas de flags.
+- Um componente = uma responsabilidade visual.
+
+## Exemplo
+
+```tsx
+// shared/ui/Button/Button.tsx
+type ButtonProps = {
+  variant?: 'primary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+export function Button({ variant = 'primary', size = 'md', loading, children, ...rest }: ButtonProps) {
+  return (
+    <button data-variant={variant} data-size={size} disabled={loading || rest.disabled} {...rest}>
+      {loading ? '…' : children}
+    </button>
+  );
+}
+```
+
+Antes de criar um componente novo em feature, verificar se já existe equivalente em `shared/ui`.

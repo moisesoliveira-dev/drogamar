@@ -1,19 +1,22 @@
-# Build
+# Build (contexto = raiz do monorepo)
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+COPY apps/frontend/package.json ./apps/frontend/
+COPY apps/backend/package.json ./apps/backend/
 
-COPY . .
-RUN npm run build
+RUN npm ci -w @drogamar/frontend
+
+COPY apps/frontend ./apps/frontend
+RUN npm run build -w @drogamar/frontend
 
 # Serve
 FROM nginx:1.27-alpine AS production
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
 
 EXPOSE 80
 

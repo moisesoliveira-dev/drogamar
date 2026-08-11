@@ -1,0 +1,37 @@
+---
+description: Usar Impeccable para design de UI no frontend
+globs: apps/frontend/**
+alwaysApply: false
+---
+
+# Frontend — Impeccable
+
+Usar **Impeccable** ([impeccable.style](https://impeccable.style)) como guia de design da IA no frontend.
+
+## Setup esperado
+
+- Skill instalada no projeto (`npx impeccable install` / update quando necessário).
+- Contexto em `PRODUCT.md` e `DESIGN.md` (raiz ou `apps/frontend`) — ler antes de UI nova.
+- **Estilo obrigatório:** `farmacia_manipulacao_shell.html` + rule `frontend-design-shell` (tokens `--fm-*`). Em conflito, o shell vence.
+
+## Durante o trabalho de UI
+
+1. Seguir o shell / tokens `--fm-*`; não inventar paleta paralela.
+2. Após mudanças visuais relevantes: mentalidade `/impeccable audit` (a11y, responsive) e `/impeccable polish`.
+3. Layout e hierarquia antes de “enfeite”; motion só com propósito.
+
+## Anti-patterns (proibido)
+
+- Paletas/estilos genéricos de IA (roxo→índigo, glow, glassmorphism)
+- Trocar Inter do shell por outra fonte “porque Impeccable recomenda”
+- Cards aninhados sem necessidade
+- Texto cinza em fundo colorido fora do padrão do shell
+- Bounce/elastic easing
+- Hero com badges flutuantes / pill clusters de marketing
+
+## Ordem visual (alinha ao workflow core)
+
+1. Implementar estrutura no padrão do shell
+2. Conferir posição e tamanho dos elementos vs. o HTML de referência
+3. Responsividade (`/impeccable adapt` mentalidade)
+4. Polish final

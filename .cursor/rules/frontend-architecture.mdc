@@ -1,0 +1,60 @@
+---
+description: Frontend feature-based com Facade, C/P, Application Layer, Zod, React Query e Zustand
+globs: apps/frontend/**
+alwaysApply: false
+---
+
+# Frontend — Arquitetura
+
+Padrões obrigatórios: **Facade**, **feature-based folders**, **Container/Presentational**, **Application Layer**, **Zod** em toda fronteira, **TanStack Query**, **Zustand**.
+
+## Estrutura feature-based
+
+```
+apps/frontend/src/
+  shared/                 # ui-kit, lib, hooks genéricos, types base
+    ui/                   # componentes reutilizáveis
+    lib/                  # api client, query-client, utils
+  features/<feature>/
+    application/          # actions / use-cases (camada de aplicação)
+    domain/               # tipos, schemas Zod, regras puras de UI/domínio de tela
+    infrastructure/       # chamadas HTTP, adapters
+    facade/               # API pública da feature para o resto do app
+    containers/           # smart components (dados, state, side-effects)
+    components/           # presentational (só props/UI)
+    stores/               # slices Zustand da feature (se precisar)
+    index.ts              # reexporta apenas o facade
+```
+
+## Facade
+
+- Outras features importam **somente** `features/x` (facade), nunca `containers/` ou `infrastructure/` internos.
+- Facade agrupa hooks públicos, actions e tipos exportados.
+
+## Container / Presentational
+
+- **Container**: busca dados (React Query), store, actions; passa props.
+- **Presentational**: sem fetch, sem store global; recebe props e callbacks.
+- Evitar “componentes meio-termo”.
+
+## Application Layer
+
+- Em Next.js: Server Actions como application layer.
+- Neste app (Vite): espelhar com `features/<f>/application/actions.ts` — orquestra validação Zod + infrastructure; sem JSX.
+- UI nunca chama API crua; passa pela action/facade.
+
+## Zod em todas as fronteiras
+
+- Validar: env, responses da API, forms, search params, props críticas de integração.
+- Inferir types com `z.infer<typeof Schema>`; não duplicar interfaces manuais.
+
+## TanStack Query + Zustand
+
+- **Server state** → React Query (cache, stale, mutations).
+- **Client/UI state** → Zustand (filtros locais, UI ephemeral, preferências de sessão).
+- Não espelhar resposta de API no Zustand.
+
+## Modularidade
+
+- Feature autocontida; shared só para o genuinamente transversal.
+- Colocar código novo na feature certa; não inflar `shared` por preguiça.
