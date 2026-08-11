@@ -61,6 +61,12 @@ const LojaOnlineContainer = lazy(() =>
   })),
 )
 
+const CarrinhoContainer = lazy(() =>
+  import('./features/vendas-carrinho').then((m) => ({
+    default: m.CarrinhoContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -211,6 +217,26 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <LojaOnlineContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="vendas"
+                element={<Navigate to="/app/vendas/carrinho" replace />}
+              />
+              <Route
+                path="comercial"
+                element={<Navigate to="/app/vendas/carrinho" replace />}
+              />
+              <Route
+                path="comercial/*"
+                element={<Navigate to="/app/vendas/carrinho" replace />}
+              />
+              <Route
+                path="vendas/carrinho"
+                element={
+                  <Suspense fallback={null}>
+                    <CarrinhoContainer />
                   </Suspense>
                 }
               />

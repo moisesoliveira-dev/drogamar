@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { resolveActiveNav } from './resolve-active-nav'
 
 describe('resolveActiveNav', () => {
-  it('seleciona comercial/clientes a partir da rota', () => {
-    const active = resolveActiveNav('/app/comercial/clientes')
-    expect(active.module?.id).toBe('comercial')
-    expect(active.item?.id).toBe('clientes')
+  it('seleciona vendas/carrinho (F1) a partir da rota', () => {
+    const active = resolveActiveNav('/app/vendas/carrinho')
+    expect(active.module?.id).toBe('vendas')
+    expect(active.item?.id).toBe('carrinho-cliente')
+    expect(active.item?.code).toBe('F1')
   })
 
   it('usa dashboard do módulo em rota base', () => {
