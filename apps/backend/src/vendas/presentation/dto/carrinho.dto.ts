@@ -6,6 +6,7 @@ import {
   IsString,
   Max,
   Min,
+  MinLength,
   ValidateIf,
 } from 'class-validator';
 
@@ -64,4 +65,10 @@ export class SearchQueryDto {
   @Min(1)
   @Max(100)
   pageSize?: number = 20;
+}
+
+export class BarcodeLookupDto {
+  @IsString()
+  @MinLength(1)
+  code!: string;
 }

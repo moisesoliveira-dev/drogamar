@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
+import { mapBarcodeProduct } from '../../domain/cart/barcode-product';
 import {
   calculateCartTotals,
   lineSubtotal,
@@ -56,6 +57,12 @@ export class CartService {
   /** Cliente obrigatório — preparado para política futura / F4 balcão. */
   private readonly requireCustomer = false;
 
+  /**
+   * Leitura duplicada do mesmo item incrementa a linha existente
+   * em vez de criar outra (comportamento padrão PDV / F2).
+   */
+  private readonly mergeDuplicateLineItems = true;
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getOrCreateOpenCart(operatorId: string) {
@@ -91,7 +98,9 @@ export class CartService {
       product.saleUnit?.code ?? product.measureUnit?.code ?? null;
 
     const cart = await this.ensureOpenCart(operatorId);
-    const existing = cart.items.find((i) => i.stockItemId === product.id);
+    const existing = this.mergeDuplicateLineItems
+      ? cart.items.find((i) => i.stockItemId === product.id)
+      : undefined;
     const nextQty = existing ? dec(existing.quantity) + quantity : quantity;
 
     if (product.trackStock && dec(product.currentStock) < nextQty) {
@@ -383,6 +392,57 @@ export class CartService {
       page,
       pageSize,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    };
+  }
+
+  /**
+   * Busca exata por código de barras (F2). Inclui inativos para feedback de UI.
+   * Fallback: código interno ou SKU com match exato (case-insensitive).
+   */
+  async findProductByBarcode(rawCode: string) {
+    const code = rawCode.trim();
+    if (!code) {
+      return { found: false as const, product: null };
+    }
+
+    const product =
+      (await this.prisma.stockItem.findFirst({
+        where: {
+          itemType: { in: ['PRODUCT', 'OTHER', 'SERVICE'] },
+          barcode: { equals: code, mode: 'insensitive' },
+        },
+        include: { saleUnit: true, measureUnit: true },
+      })) ??
+      (await this.prisma.stockItem.findFirst({
+        where: {
+          itemType: { in: ['PRODUCT', 'OTHER', 'SERVICE'] },
+          OR: [
+            { code: { equals: code, mode: 'insensitive' } },
+            { sku: { equals: code, mode: 'insensitive' } },
+          ],
+        },
+        include: { saleUnit: true, measureUnit: true },
+      }));
+
+    if (!product) {
+      return { found: false as const, product: null };
+    }
+
+    return {
+      found: true as const,
+      product: mapBarcodeProduct({
+        id: product.id,
+        code: product.code,
+        description: product.description,
+        sku: product.sku,
+        barcode: product.barcode,
+        status: product.status,
+        salePrice: decOrNull(product.salePrice),
+        currentStock: dec(product.currentStock),
+        trackStock: product.trackStock,
+        unitCode: product.saleUnit?.code ?? product.measureUnit?.code ?? null,
+        imageUrl: null,
+      }),
     };
   }
 

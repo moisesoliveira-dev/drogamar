@@ -28,6 +28,7 @@ import {
 } from '../domain/cart/errors';
 import {
   AddCartItemDto,
+  BarcodeLookupDto,
   SearchQueryDto,
   SetCartDiscountDto,
   SetCustomerDto,
@@ -141,6 +142,11 @@ export class CarrinhoController {
       query.page ?? 1,
       query.pageSize ?? 20,
     );
+  }
+
+  @Get('produtos/codigo-barras')
+  findByBarcode(@Query() query: BarcodeLookupDto) {
+    return this.cart.findProductByBarcode(query.code);
   }
 
   private rethrow(error: unknown): never {
