@@ -39,6 +39,13 @@ services:
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@drogamar.local}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMeNow!123}
       SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Administrador}
+      EXPORT_STORAGE_PATH: /app/apps/backend/storage/exports
+      EXPORT_RETENTION_DAYS: ${EXPORT_RETENTION_DAYS:-7}
+      EXPORT_MAX_RECORDS: ${EXPORT_MAX_RECORDS:-50000}
+      EXPORT_SYNC_THRESHOLD: ${EXPORT_SYNC_THRESHOLD:-1000}
+      EXPORT_MAX_CONCURRENT_PER_USER: ${EXPORT_MAX_CONCURRENT_PER_USER:-2}
+    volumes:
+      - exports_data:/app/apps/backend/storage/exports
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,6 +68,7 @@ services:
 
 volumes:
   postgres_data:
+  exports_data:
 
 networks:
   drogamar-network:

@@ -48,6 +48,10 @@ lerna-debug.log*
 *.seed
 *.pid.lock
 
+# Export files (F3)
+apps/backend/storage/
+**/storage/exports/
+
 # Docker
 postgres_data
 
