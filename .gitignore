@@ -9,6 +9,7 @@ build
 **/build
 coverage
 **/coverage
+*.tsbuildinfo
 dist-ssr
 
 # Env
