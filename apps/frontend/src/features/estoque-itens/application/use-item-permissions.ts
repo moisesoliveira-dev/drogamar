@@ -9,6 +9,6 @@ export function useItemPermissions() {
     canEdit: true,
     canDeactivate: true,
     canDelete: true,
-    canExport: false,
+    canExport: true,
   }
 }

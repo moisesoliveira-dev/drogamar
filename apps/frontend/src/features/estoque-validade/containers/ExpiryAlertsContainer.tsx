@@ -118,6 +118,7 @@ export function ExpiryAlertsContainer() {
       lotDetail={lotDetail}
       lotLoading={Boolean(lotId) && lotQuery.isLoading}
       canConfigureWindow={permissions.canConfigureWindow}
+      canExport={permissions.canExport}
       onDraftChange={(key, value) => {
         setDraft(key as 'status', value as never)
       }}
@@ -128,6 +129,28 @@ export function ExpiryAlertsContainer() {
       onRefresh={() => {
         void alertsQuery.refetch()
       }}
+      onExport={() =>
+        navigate('/app/estoque/exportacao', {
+          state: {
+            type: 'LOTS_EXPIRY',
+            format: 'XLSX',
+            filters: {
+              alertWindowDays,
+              status: status || 'ATTENTION',
+              search: search || undefined,
+              categoryId: categoryId || undefined,
+              brandId: brandId || undefined,
+              lotNumber: lotNumber || undefined,
+              locationId: locationId || undefined,
+              expiryFrom: expiryFrom || undefined,
+              expiryTo: expiryTo || undefined,
+              onlyWithQuantity: onlyWithQuantity || undefined,
+            },
+            sortBy,
+            sortDir,
+          },
+        })
+      }
       onRetry={() => {
         void alertsQuery.refetch()
       }}

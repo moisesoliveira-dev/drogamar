@@ -167,6 +167,7 @@ export function ItemsListContainer() {
         canEdit={permissions.canEdit}
         canDeactivate={permissions.canDeactivate}
         canDelete={permissions.canDelete}
+        canExport={permissions.canExport}
         onSearchChange={setSearchDraft}
         onFilterChange={(key, value) => {
           setFilter(key as 'status', value)
@@ -179,6 +180,24 @@ export function ItemsListContainer() {
         onPageChange={(nextPage) => setFilter('page', nextPage)}
         onSelect={(item) => setSelectedId(item.id)}
         onCreate={() => navigate('/app/estoque/itens/novo')}
+        onExport={() =>
+          navigate('/app/estoque/exportacao', {
+            state: {
+              type: 'ITEMS',
+              format: 'XLSX',
+              filters: {
+                search: search || undefined,
+                status: status || undefined,
+                categoryId: categoryId || undefined,
+                brandId: brandId || undefined,
+                locationId: locationId || undefined,
+                measureUnitId: measureUnitId || undefined,
+              },
+              sortBy,
+              sortDir,
+            },
+          })
+        }
         onView={(item) => navigate(`/app/estoque/itens/${item.id}`)}
         onEdit={(item) => navigate(`/app/estoque/itens/${item.id}/editar`)}
         onDuplicate={(item) => duplicateMutation.mutate(item.id)}

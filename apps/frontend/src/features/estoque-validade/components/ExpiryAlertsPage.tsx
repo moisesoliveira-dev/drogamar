@@ -53,12 +53,14 @@ export type ExpiryAlertsPageProps = {
   lotDetail: LotDetail | null
   lotLoading?: boolean
   canConfigureWindow: boolean
+  canExport: boolean
   onDraftChange: (key: string, value: string | number | boolean) => void
   onApplyFilters: () => void
   onClearFilters: () => void
   onSortChange: (sortBy: string) => void
   onPageChange: (page: number) => void
   onRefresh: () => void
+  onExport: () => void
   onRetry: () => void
   onViewItem: (itemId: string) => void
   onViewLot: (lotId: string) => void
@@ -186,9 +188,16 @@ export function ExpiryAlertsPage(props: ExpiryAlertsPageProps) {
         title="Alerta de Validade"
         description="Acompanhe os itens próximos do vencimento e evite perdas de estoque."
         actions={
-          <Button type="button" variant="secondary" onClick={props.onRefresh}>
-            Atualizar
-          </Button>
+          <div style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+            {props.canExport ? (
+              <Button type="button" variant="secondary" onClick={props.onExport}>
+                Exportar
+              </Button>
+            ) : null}
+            <Button type="button" variant="secondary" onClick={props.onRefresh}>
+              Atualizar
+            </Button>
+          </div>
         }
       />
 

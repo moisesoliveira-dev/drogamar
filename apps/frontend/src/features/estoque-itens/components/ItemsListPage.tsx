@@ -37,6 +37,7 @@ export type ItemsListPageProps = {
   canEdit: boolean
   canDeactivate: boolean
   canDelete: boolean
+  canExport: boolean
   onSearchChange: (value: string) => void
   onFilterChange: (key: string, value: string) => void
   onClearFilters: () => void
@@ -44,6 +45,7 @@ export type ItemsListPageProps = {
   onPageChange: (page: number) => void
   onSelect: (item: StockItem) => void
   onCreate: () => void
+  onExport: () => void
   onView: (item: StockItem) => void
   onEdit: (item: StockItem) => void
   onDuplicate: (item: StockItem) => void
@@ -79,6 +81,7 @@ export function ItemsListPage(props: ItemsListPageProps) {
     canEdit,
     canDeactivate,
     canDelete,
+    canExport,
   } = props
 
   const columns: TableColumn<StockItem>[] = [
@@ -198,11 +201,18 @@ export function ItemsListPage(props: ItemsListPageProps) {
         title="Cadastro de Itens"
         description="Cadastre e gerencie os itens utilizados no estoque."
         actions={
-          canCreate ? (
-            <Button type="button" onClick={props.onCreate}>
-              + Novo item
-            </Button>
-          ) : null
+          <div style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+            {canExport ? (
+              <Button type="button" variant="secondary" onClick={props.onExport}>
+                Exportar
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <Button type="button" onClick={props.onCreate}>
+                + Novo item
+              </Button>
+            ) : null}
+          </div>
         }
       />
 

@@ -49,6 +49,12 @@ const ExpiryAlertsContainer = lazy(() =>
   })),
 )
 
+const ExportacaoContainer = lazy(() =>
+  import('./features/estoque-exportacao').then((m) => ({
+    default: m.ExportacaoContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -183,6 +189,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <ExpiryAlertsContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="estoque/exportacao"
+                element={
+                  <Suspense fallback={null}>
+                    <ExportacaoContainer />
                   </Suspense>
                 }
               />
