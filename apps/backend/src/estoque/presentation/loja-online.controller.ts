@@ -95,7 +95,9 @@ export class LojaOnlineController {
         status: (query.status as OnlineIntegrationStatus | 'ALL') ?? 'ALL',
         categoryId: query.categoryId,
         brandId: query.brandId,
-        stock: (query.stock as 'ALL' | 'WITH_STOCK' | 'WITHOUT_STOCK' | 'LOW_STOCK') ?? 'ALL',
+        stock:
+          (query.stock as
+            'ALL' | 'WITH_STOCK' | 'WITHOUT_STOCK' | 'LOW_STOCK') ?? 'ALL',
         sync: (query.sync as 'ALL' | OnlineListingSyncStatus) ?? 'ALL',
         publish: (query.publish as 'ALL' | OnlineListingPublishStatus) ?? 'ALL',
         page: query.page ?? 1,

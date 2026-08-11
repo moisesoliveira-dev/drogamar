@@ -50,7 +50,9 @@ function formatDateTime(value: Date | null | undefined): string | null {
 export class PrismaStockExportDataSource implements StockExportDataSource {
   constructor(private readonly prisma: PrismaService) {}
 
-  async count(query: Omit<ExportQuery, 'columns' | 'maxRecords'>): Promise<number> {
+  async count(
+    query: Omit<ExportQuery, 'columns' | 'maxRecords'>,
+  ): Promise<number> {
     switch (query.type) {
       case 'ITEMS':
         return this.prisma.stockItem.count({
@@ -58,14 +60,16 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
         });
       case 'CURRENT_STOCK':
         return this.prisma.stockItem.count({
-          where: this.currentStockWhere(query.filters as ExportCurrentStockFilters),
+          where: this.currentStockWhere(
+            query.filters as ExportCurrentStockFilters,
+          ),
         });
       case 'CATEGORIES':
         return this.prisma.stockCategory.count({
           where: this.categoriesWhere(query.filters as ExportCategoriesFilters),
         });
       case 'LOTS_EXPIRY':
-        return this.countLots(query.filters as ExportLotsFilters);
+        return this.countLots(query.filters);
       case 'ONLINE_STORE':
         return (
           await this.fetchOnlineStoreRows(
@@ -164,13 +168,25 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
       const publishStatus = listing?.publishStatus ?? 'NOT_PUBLISHED';
       const syncStatus = listing?.syncStatus ?? null;
 
-      if (filters.status && filters.status !== 'ALL' && integrationStatus !== filters.status) {
+      if (
+        filters.status &&
+        filters.status !== 'ALL' &&
+        integrationStatus !== filters.status
+      ) {
         continue;
       }
-      if (filters.publish && filters.publish !== 'ALL' && publishStatus !== filters.publish) {
+      if (
+        filters.publish &&
+        filters.publish !== 'ALL' &&
+        publishStatus !== filters.publish
+      ) {
         continue;
       }
-      if (filters.sync && filters.sync !== 'ALL' && (syncStatus ?? 'PENDING') !== filters.sync) {
+      if (
+        filters.sync &&
+        filters.sync !== 'ALL' &&
+        (syncStatus ?? 'PENDING') !== filters.sync
+      ) {
         continue;
       }
 
@@ -331,9 +347,12 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
 
   private async fetchCurrentStock(query: ExportQuery): Promise<ExportRow[]> {
     const filters = query.filters as ExportCurrentStockFilters;
-    const sortBy = ['code', 'description', 'currentStock', 'updatedAt'].includes(
-      query.sortBy,
-    )
+    const sortBy = [
+      'code',
+      'description',
+      'currentStock',
+      'updatedAt',
+    ].includes(query.sortBy)
       ? query.sortBy
       : 'description';
 
@@ -390,7 +409,10 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
 
   private async fetchLots(query: ExportQuery): Promise<ExportRow[]> {
     const filters = query.filters as ExportLotsFilters;
-    const candidates = await this.loadLotCandidates(filters, query.maxRecords * 3);
+    const candidates = await this.loadLotCandidates(
+      filters,
+      query.maxRecords * 3,
+    );
     const filtered = this.filterLotsInMemory(candidates, filters);
     const sorted = this.sortLots(filtered, query.sortBy, query.sortDir).slice(
       0,
@@ -430,7 +452,8 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
     }
     if (filters.expiryFrom || filters.expiryTo) {
       where.expiryDate = {};
-      if (filters.expiryFrom) where.expiryDate.gte = new Date(filters.expiryFrom);
+      if (filters.expiryFrom)
+        where.expiryDate.gte = new Date(filters.expiryFrom);
       if (filters.expiryTo) where.expiryDate.lte = new Date(filters.expiryTo);
     }
     if (filters.onlyWithQuantity) {

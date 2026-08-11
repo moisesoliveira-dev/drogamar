@@ -4,11 +4,7 @@
  */
 
 export type ExpiryStatusKind =
-  | 'EXPIRED'
-  | 'EXPIRES_TODAY'
-  | 'CRITICAL'
-  | 'WARNING'
-  | 'REGULAR';
+  'EXPIRED' | 'EXPIRES_TODAY' | 'CRITICAL' | 'WARNING' | 'REGULAR';
 
 export function toUtcDateOnly(input: Date): Date {
   return new Date(
@@ -69,9 +65,7 @@ export function estimateLotValueAtRisk(
   return Number((quantity * costPrice).toFixed(4));
 }
 
-export function isWithinAttention(
-  kind: ExpiryStatusKind,
-): boolean {
+export function isWithinAttention(kind: ExpiryStatusKind): boolean {
   return (
     kind === 'EXPIRED' ||
     kind === 'EXPIRES_TODAY' ||

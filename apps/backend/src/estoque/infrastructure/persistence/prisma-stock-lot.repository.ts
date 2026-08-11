@@ -75,7 +75,11 @@ function toRecord(row: LotRow): StockLotRecord {
   };
 }
 
-function toAlertRow(record: StockLotRecord, today: Date, window: number): ExpiryAlertRow {
+function toAlertRow(
+  record: StockLotRecord,
+  today: Date,
+  window: number,
+): ExpiryAlertRow {
   const daysRemaining = daysUntilExpiry(today, record.expiryDate);
   const statusKind = classifyExpiryStatus(daysRemaining, window);
   return {

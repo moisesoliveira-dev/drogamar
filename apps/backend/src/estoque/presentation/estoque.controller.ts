@@ -88,9 +88,7 @@ export class EstoqueController {
     return this.listExpiryHandler.execute(
       new ListExpiryAlertsQuery({
         ...query,
-        expiryFrom: query.expiryFrom
-          ? new Date(query.expiryFrom)
-          : undefined,
+        expiryFrom: query.expiryFrom ? new Date(query.expiryFrom) : undefined,
         expiryTo: query.expiryTo ? new Date(query.expiryTo) : undefined,
       }),
     );

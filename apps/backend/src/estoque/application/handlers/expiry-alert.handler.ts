@@ -137,10 +137,7 @@ export class GetStockLotHandler {
         daysRemaining,
         statusKind,
         statusLabel: formatExpiryStatusLabel(statusKind, daysRemaining),
-        valueAtRisk: estimateLotValueAtRisk(
-          lot.quantity,
-          lot.item.costPrice,
-        ),
+        valueAtRisk: estimateLotValueAtRisk(lot.quantity, lot.item.costPrice),
       }),
       item: {
         id: lot.item.id,

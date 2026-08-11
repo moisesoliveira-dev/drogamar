@@ -1,11 +1,7 @@
 export type StockItemStatus = 'ACTIVE' | 'INACTIVE';
 
 export type StockItemType =
-  | 'PRODUCT'
-  | 'RAW_MATERIAL'
-  | 'PACKAGING'
-  | 'SERVICE'
-  | 'OTHER';
+  'PRODUCT' | 'RAW_MATERIAL' | 'PACKAGING' | 'SERVICE' | 'OTHER';
 
 export type StockItemProps = {
   id: string;

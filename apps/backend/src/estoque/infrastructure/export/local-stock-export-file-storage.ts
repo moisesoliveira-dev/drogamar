@@ -5,9 +5,7 @@ import path from 'node:path';
 import { Injectable } from '@nestjs/common';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
-import {
-  mimeForFormat,
-} from '../../domain/export/file-name';
+import { mimeForFormat } from '../../domain/export/file-name';
 import type { StockExportFormat } from '../../domain/export/export-types';
 import type {
   GeneratedFile,
@@ -141,12 +139,16 @@ export class LocalStockExportFileStorage implements StockExportFileStorage {
       doc.pipe(stream);
       doc.fontSize(14).text(title, { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(9).fillColor('#444').text(`Gerado em ${new Date().toLocaleString('pt-BR')}`);
+      doc
+        .fontSize(9)
+        .fillColor('#444')
+        .text(`Gerado em ${new Date().toLocaleString('pt-BR')}`);
       doc.moveDown();
       doc.fillColor('#000');
 
       const colCount = Math.max(headers.length, 1);
-      const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const pageWidth =
+        doc.page.width - doc.page.margins.left - doc.page.margins.right;
       const colWidth = pageWidth / colCount;
 
       const drawRow = (
@@ -158,10 +160,15 @@ export class LocalStockExportFileStorage implements StockExportFileStorage {
           doc
             .font(bold ? 'Helvetica-Bold' : 'Helvetica')
             .fontSize(8)
-            .text(value == null ? '' : String(value), doc.page.margins.left + index * colWidth, y, {
-              width: colWidth - 4,
-              ellipsis: true,
-            });
+            .text(
+              value == null ? '' : String(value),
+              doc.page.margins.left + index * colWidth,
+              y,
+              {
+                width: colWidth - 4,
+                ellipsis: true,
+              },
+            );
         });
         doc.moveDown(0.8);
         if (doc.y > doc.page.height - 48) {

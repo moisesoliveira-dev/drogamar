@@ -12,8 +12,7 @@ export class EnvStockExportConfig implements StockExportConfig {
 
   constructor(config: ConfigService) {
     this.storagePath =
-      config.get<string>('EXPORT_STORAGE_PATH') ??
-      'storage/exports';
+      config.get<string>('EXPORT_STORAGE_PATH') ?? 'storage/exports';
     this.retentionDays = Number(config.get('EXPORT_RETENTION_DAYS') ?? 7);
     this.maxRecords = Number(config.get('EXPORT_MAX_RECORDS') ?? 50000);
     this.syncThreshold = Number(config.get('EXPORT_SYNC_THRESHOLD') ?? 1000);

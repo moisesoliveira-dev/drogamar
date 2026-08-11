@@ -17,10 +17,7 @@ import {
 } from '../../domain/ports/stock-item.repository';
 import { UpdateStockItemCommand } from '../commands/stock-item.commands';
 import { toStockItemDto } from '../dto/stock-item.dto';
-import {
-  assertNonNegative,
-  normalizeOptionalText,
-} from '../helpers/normalize';
+import { assertNonNegative, normalizeOptionalText } from '../helpers/normalize';
 
 @Injectable()
 export class UpdateStockItemHandler {
@@ -41,8 +38,7 @@ export class UpdateStockItemHandler {
       throw new StockItemValidationError('Descrição é obrigatória.');
     }
 
-    const code =
-      normalizeOptionalText(input.code) ?? existing.props.code;
+    const code = normalizeOptionalText(input.code) ?? existing.props.code;
     const sku = normalizeOptionalText(input.sku);
     const barcode = normalizeOptionalText(input.barcode);
 

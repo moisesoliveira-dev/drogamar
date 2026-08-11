@@ -25,9 +25,7 @@ const includeRelations = {
 export class PrismaStockItemRepository implements StockItemRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private buildWhere(
-    filter: StockItemListFilter,
-  ): Prisma.StockItemWhereInput {
+  private buildWhere(filter: StockItemListFilter): Prisma.StockItemWhereInput {
     const where: Prisma.StockItemWhereInput = {};
 
     if (filter.status) where.status = filter.status;

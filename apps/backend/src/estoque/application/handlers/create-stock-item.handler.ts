@@ -18,10 +18,7 @@ import {
 import { StockItem } from '../../domain/stock-item';
 import { CreateStockItemCommand } from '../commands/stock-item.commands';
 import { toStockItemDto } from '../dto/stock-item.dto';
-import {
-  assertNonNegative,
-  normalizeOptionalText,
-} from '../helpers/normalize';
+import { assertNonNegative, normalizeOptionalText } from '../helpers/normalize';
 
 @Injectable()
 export class CreateStockItemHandler {

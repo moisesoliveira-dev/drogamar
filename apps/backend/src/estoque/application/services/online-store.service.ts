@@ -50,9 +50,7 @@ export class OnlineStoreService {
     if (!channel || channel.connectionStatus === 'DISCONNECTED') {
       return {
         connected: false,
-        channel: channel
-          ? this.toChannelDto(channel)
-          : null,
+        channel: channel ? this.toChannelDto(channel) : null,
         metrics: null,
       };
     }
@@ -107,7 +105,8 @@ export class OnlineStoreService {
       // recount properly below in list; for metrics use listing errors + unpublished blockers
       if (
         listing?.syncStatus === 'ERROR' ||
-        listing?.publishStatus === 'PUBLISHED' && listing.syncStatus === 'PENDING'
+        (listing?.publishStatus === 'PUBLISHED' &&
+          listing.syncStatus === 'PENDING')
       ) {
         pending += 1;
       } else if (!listing || listing.publishStatus === 'NOT_PUBLISHED') {
@@ -152,10 +151,8 @@ export class OnlineStoreService {
   }) {
     const existing = await this.getDefaultChannel();
     const credentialsHash = input.credentials?.trim()
-      ? createHash('sha256')
-          .update(input.credentials.trim())
-          .digest('hex')
-      : existing?.credentialsHash ?? null;
+      ? createHash('sha256').update(input.credentials.trim()).digest('hex')
+      : (existing?.credentialsHash ?? null);
     const hasCredentials = Boolean(credentialsHash);
 
     if (existing) {
@@ -238,8 +235,22 @@ export class OnlineStoreService {
         item.trackExpiry,
         physical,
       );
-      const dto = this.toProductRow(item, listing, physical, available, channel.name);
-      if (!this.matchesProductFilters(dto, filters, physical, available, item.minStock)) {
+      const dto = this.toProductRow(
+        item,
+        listing,
+        physical,
+        available,
+        channel.name,
+      );
+      if (
+        !this.matchesProductFilters(
+          dto,
+          filters,
+          physical,
+          available,
+          item.minStock,
+        )
+      ) {
         continue;
       }
       rows.push(dto);
@@ -278,7 +289,13 @@ export class OnlineStoreService {
       item.trackExpiry,
       physical,
     );
-    const row = this.toProductRow(item, listing, physical, available, channel.name);
+    const row = this.toProductRow(
+      item,
+      listing,
+      physical,
+      available,
+      channel.name,
+    );
     const pendings = evaluatePublishReadiness({
       itemStatus: item.status,
       code: item.code,
@@ -339,7 +356,9 @@ export class OnlineStoreService {
     },
   ) {
     const channel = await this.requireConnectedChannel();
-    const item = await this.prisma.stockItem.findUnique({ where: { id: itemId } });
+    const item = await this.prisma.stockItem.findUnique({
+      where: { id: itemId },
+    });
     if (!item) return null;
 
     if (
@@ -577,8 +596,7 @@ export class OnlineStoreService {
               syncStatus: 'ERROR',
               lastErrorCode: pendings[0]?.code ?? 'PUBLISH_BLOCKED',
               lastErrorMessage:
-                pendings[0]?.message ??
-                friendlySyncError('PUBLISH_BLOCKED'),
+                pendings[0]?.message ?? friendlySyncError('PUBLISH_BLOCKED'),
             },
           });
           continue;
@@ -606,8 +624,7 @@ export class OnlineStoreService {
         success += 1;
       }
 
-      const status =
-        errors > 0 ? 'COMPLETED_WITH_ERRORS' : 'COMPLETED';
+      const status = errors > 0 ? 'COMPLETED_WITH_ERRORS' : 'COMPLETED';
 
       await this.prisma.onlineStoreSyncJob.update({
         where: { id: jobId },
@@ -769,9 +786,7 @@ export class OnlineStoreService {
   ) {
     const erpPrice = dec(item.salePrice);
     const storePrice =
-      listing && !listing.useErpPrice
-        ? dec(listing.priceOverride)
-        : erpPrice;
+      listing && !listing.useErpPrice ? dec(listing.priceOverride) : erpPrice;
     const integrationStatus = resolveIntegrationStatus({
       itemStatus: item.status,
       publishStatus: listing?.publishStatus ?? null,

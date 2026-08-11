@@ -66,11 +66,7 @@ export function evaluatePublishReadiness(input: {
     });
   }
 
-  if (
-    input.trackExpiry &&
-    input.physicalQty > 0 &&
-    input.availableQty <= 0
-  ) {
+  if (input.trackExpiry && input.physicalQty > 0 && input.availableQty <= 0) {
     pendings.push({
       code: 'EXPIRED_STOCK_ONLY',
       message: 'O estoque físico possui apenas lotes vencidos.',

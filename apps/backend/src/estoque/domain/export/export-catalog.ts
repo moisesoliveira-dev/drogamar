@@ -1,7 +1,16 @@
-import type { ExportColumnDef, ExportTypeMeta, StockExportType } from './export-types';
+import type {
+  ExportColumnDef,
+  ExportTypeMeta,
+  StockExportType,
+} from './export-types';
 
 const itemColumns: ExportColumnDef[] = [
-  { id: 'code', label: 'Código', group: 'Identificação', defaultSelected: true },
+  {
+    id: 'code',
+    label: 'Código',
+    group: 'Identificação',
+    defaultSelected: true,
+  },
   {
     id: 'description',
     label: 'Descrição',
@@ -167,7 +176,12 @@ const lotColumns: ExportColumnDef[] = [
 ];
 
 const currentStockColumns: ExportColumnDef[] = [
-  { id: 'code', label: 'Código', group: 'Identificação', defaultSelected: true },
+  {
+    id: 'code',
+    label: 'Código',
+    group: 'Identificação',
+    defaultSelected: true,
+  },
   {
     id: 'description',
     label: 'Descrição',

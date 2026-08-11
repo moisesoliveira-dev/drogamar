@@ -47,9 +47,7 @@ export interface StockItemRepository {
   findByIdWithRelations(
     id: string,
   ): Promise<{ item: StockItem; relations: StockItemRelations } | null>;
-  listWithRelations(
-    filter: StockItemListFilter,
-  ): Promise<{
+  listWithRelations(filter: StockItemListFilter): Promise<{
     items: Array<{ item: StockItem; relations: StockItemRelations }>;
     total: number;
     page: number;

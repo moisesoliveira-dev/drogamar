@@ -82,7 +82,7 @@ export class ExportacaoController {
       return await this.previewHandler.execute(
         new PreviewExportCountQuery(
           body.type,
-          body.filters as ExportFilters,
+          body.filters,
           body.sortBy,
           body.sortDir,
         ),
@@ -98,11 +98,7 @@ export class ExportacaoController {
     @Query() query: ListExportsQueryDto,
   ) {
     return this.listHandler.execute(
-      new ListStockExportsQuery(
-        user.id,
-        query.page ?? 1,
-        query.pageSize ?? 10,
-      ),
+      new ListStockExportsQuery(user.id, query.page ?? 1, query.pageSize ?? 10),
     );
   }
 
@@ -118,7 +114,7 @@ export class ExportacaoController {
           user.id,
           body.type,
           body.format,
-          body.filters as ExportFilters,
+          body.filters,
           body.columns,
           body.sortBy,
           body.sortDir,
@@ -136,7 +132,9 @@ export class ExportacaoController {
     @Param('id') id: string,
   ) {
     try {
-      return await this.getHandler.execute(new GetStockExportQuery(user.id, id));
+      return await this.getHandler.execute(
+        new GetStockExportQuery(user.id, id),
+      );
     } catch (error) {
       this.rethrow(error);
     }
@@ -213,7 +211,10 @@ export class ExportacaoController {
         message: error.message,
       });
     }
-    if (error instanceof ExportLimitError || error instanceof ExportConcurrencyError) {
+    if (
+      error instanceof ExportLimitError ||
+      error instanceof ExportConcurrencyError
+    ) {
       throw new UnprocessableEntityException({
         code: error.code,
         message: error.message,

@@ -1,21 +1,13 @@
 export type SalesChannelConnectionStatus =
-  | 'DISCONNECTED'
-  | 'CONNECTED'
-  | 'ERROR';
+  'DISCONNECTED' | 'CONNECTED' | 'ERROR';
 
 export type OnlineListingPublishStatus =
-  | 'NOT_PUBLISHED'
-  | 'PUBLISHED'
-  | 'UNAVAILABLE';
+  'NOT_PUBLISHED' | 'PUBLISHED' | 'UNAVAILABLE';
 
 export type OnlineListingSyncStatus = 'SYNCED' | 'PENDING' | 'ERROR';
 
 export type OnlineIntegrationStatus =
-  | 'PUBLISHED'
-  | 'NOT_PUBLISHED'
-  | 'PENDING'
-  | 'ERROR'
-  | 'UNAVAILABLE';
+  'PUBLISHED' | 'NOT_PUBLISHED' | 'PENDING' | 'ERROR' | 'UNAVAILABLE';
 
 export type OnlineStorePendingCode =
   | 'NO_PRICE'

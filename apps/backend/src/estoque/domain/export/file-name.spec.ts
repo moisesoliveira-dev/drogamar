@@ -8,9 +8,9 @@ describe('sanitizeExportFileName', () => {
   });
 
   it('usa fallback quando vazio', () => {
-    expect(sanitizeExportFileName('   ', 'estoque_itens_2026-08-11', 'xlsx')).toBe(
-      'estoque_itens_2026-08-11.xlsx',
-    );
+    expect(
+      sanitizeExportFileName('   ', 'estoque_itens_2026-08-11', 'xlsx'),
+    ).toBe('estoque_itens_2026-08-11.xlsx');
   });
 
   it('preserva extensão correta', () => {

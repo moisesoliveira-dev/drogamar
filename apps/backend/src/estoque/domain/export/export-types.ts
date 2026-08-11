@@ -1,19 +1,10 @@
 export type StockExportType =
-  | 'ITEMS'
-  | 'LOTS_EXPIRY'
-  | 'CURRENT_STOCK'
-  | 'CATEGORIES'
-  | 'ONLINE_STORE';
+  'ITEMS' | 'LOTS_EXPIRY' | 'CURRENT_STOCK' | 'CATEGORIES' | 'ONLINE_STORE';
 
 export type StockExportFormat = 'XLSX' | 'CSV' | 'PDF';
 
 export type StockExportStatus =
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'EXPIRED'
-  | 'CANCELLED';
+  'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'EXPIRED' | 'CANCELLED';
 
 export type ExportColumnDef = {
   id: string;

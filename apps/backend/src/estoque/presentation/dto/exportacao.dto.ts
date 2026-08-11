@@ -14,7 +14,8 @@ import {
 
 export class CreateExportBodyDto {
   @IsIn(['ITEMS', 'LOTS_EXPIRY', 'CURRENT_STOCK', 'CATEGORIES', 'ONLINE_STORE'])
-  type!: 'ITEMS' | 'LOTS_EXPIRY' | 'CURRENT_STOCK' | 'CATEGORIES' | 'ONLINE_STORE';
+  type!:
+    'ITEMS' | 'LOTS_EXPIRY' | 'CURRENT_STOCK' | 'CATEGORIES' | 'ONLINE_STORE';
 
   @IsIn(['XLSX', 'CSV', 'PDF'])
   format!: 'XLSX' | 'CSV' | 'PDF';
@@ -41,7 +42,8 @@ export class CreateExportBodyDto {
 
 export class PreviewExportBodyDto {
   @IsIn(['ITEMS', 'LOTS_EXPIRY', 'CURRENT_STOCK', 'CATEGORIES', 'ONLINE_STORE'])
-  type!: 'ITEMS' | 'LOTS_EXPIRY' | 'CURRENT_STOCK' | 'CATEGORIES' | 'ONLINE_STORE';
+  type!:
+    'ITEMS' | 'LOTS_EXPIRY' | 'CURRENT_STOCK' | 'CATEGORIES' | 'ONLINE_STORE';
 
   @IsObject()
   filters!: Record<string, unknown>;

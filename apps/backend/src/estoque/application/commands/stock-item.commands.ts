@@ -1,7 +1,4 @@
-import type {
-  StockItemStatus,
-  StockItemType,
-} from '../../domain/stock-item';
+import type { StockItemStatus, StockItemType } from '../../domain/stock-item';
 
 export type UpsertStockItemInput = {
   code?: string | null;

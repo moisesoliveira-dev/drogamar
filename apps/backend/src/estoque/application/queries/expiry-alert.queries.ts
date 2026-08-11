@@ -1,9 +1,11 @@
 import type { ExpiryAlertListFilter } from '../../domain/ports/stock-lot.repository';
 
 export class ListExpiryAlertsQuery {
-  constructor(readonly filter: Partial<ExpiryAlertListFilter> & {
-    alertWindowDays?: number;
-  }) {}
+  constructor(
+    readonly filter: Partial<ExpiryAlertListFilter> & {
+      alertWindowDays?: number;
+    },
+  ) {}
 }
 
 export class GetStockLotQuery {

@@ -16,7 +16,9 @@ export class ExportNotFoundError extends Error {
 
 export class ExportPermissionError extends Error {
   readonly code = 'EXPORT_FORBIDDEN';
-  constructor(message = 'Você não possui permissão para exportar esses dados.') {
+  constructor(
+    message = 'Você não possui permissão para exportar esses dados.',
+  ) {
     super(message);
     this.name = 'ExportPermissionError';
   }
@@ -52,7 +54,9 @@ export class ExportNotReadyError extends Error {
 
 export class ExportExpiredError extends Error {
   readonly code = 'EXPORT_EXPIRED';
-  constructor(message = 'Esta exportação expirou e não pode mais ser baixada.') {
+  constructor(
+    message = 'Esta exportação expirou e não pode mais ser baixada.',
+  ) {
     super(message);
     this.name = 'ExportExpiredError';
   }

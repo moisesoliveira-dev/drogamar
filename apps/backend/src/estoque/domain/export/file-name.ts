@@ -16,7 +16,10 @@ export function sanitizeExportFileName(
   return `${withoutExt}.${ext}`;
 }
 
-export function defaultExportBaseName(typeLabel: string, now = new Date()): string {
+export function defaultExportBaseName(
+  typeLabel: string,
+  now = new Date(),
+): string {
   const date = now.toISOString().slice(0, 10);
   const slug = typeLabel
     .normalize('NFKD')

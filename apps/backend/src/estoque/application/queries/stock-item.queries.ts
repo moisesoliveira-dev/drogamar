@@ -1,7 +1,4 @@
-import type {
-  StockItemStatus,
-  StockItemType,
-} from '../../domain/stock-item';
+import type { StockItemStatus, StockItemType } from '../../domain/stock-item';
 import type { StockItemListFilter } from '../../domain/ports/stock-item.repository';
 
 export class ListStockItemsQuery {

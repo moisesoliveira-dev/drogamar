@@ -7,7 +7,9 @@ import type {
   StockExportType,
 } from '../export/export-types';
 
-export const STOCK_EXPORT_JOB_REPOSITORY = Symbol('STOCK_EXPORT_JOB_REPOSITORY');
+export const STOCK_EXPORT_JOB_REPOSITORY = Symbol(
+  'STOCK_EXPORT_JOB_REPOSITORY',
+);
 
 export type ExportJobRecord = {
   id: string;
@@ -77,13 +79,15 @@ export interface StockExportJobRepository {
   isCancelRequested(id: string): Promise<boolean>;
 }
 
-export function toExportJobView(job: ExportJobRecord, now = new Date()): ExportJobView {
+export function toExportJobView(
+  job: ExportJobRecord,
+  now = new Date(),
+): ExportJobView {
   const expired =
     job.status === 'EXPIRED' ||
     (job.expiresAt != null && job.expiresAt.getTime() < now.getTime());
-  const status: StockExportStatus = expired && job.status === 'COMPLETED'
-    ? 'EXPIRED'
-    : job.status;
+  const status: StockExportStatus =
+    expired && job.status === 'COMPLETED' ? 'EXPIRED' : job.status;
 
   return {
     id: job.id,
@@ -110,6 +114,7 @@ export function toExportJobView(job: ExportJobRecord, now = new Date()): ExportJ
     createdAt: job.createdAt.toISOString(),
     canDownload: status === 'COMPLETED' && !expired && Boolean(job.storedPath),
     canCancel: status === 'PENDING' || status === 'PROCESSING',
-    canRetry: status === 'FAILED' || status === 'EXPIRED' || status === 'CANCELLED',
+    canRetry:
+      status === 'FAILED' || status === 'EXPIRED' || status === 'CANCELLED',
   };
 }
