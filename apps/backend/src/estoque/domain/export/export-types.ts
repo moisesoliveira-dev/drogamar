@@ -2,7 +2,8 @@ export type StockExportType =
   | 'ITEMS'
   | 'LOTS_EXPIRY'
   | 'CURRENT_STOCK'
-  | 'CATEGORIES';
+  | 'CATEGORIES'
+  | 'ONLINE_STORE';
 
 export type StockExportFormat = 'XLSX' | 'CSV' | 'PDF';
 

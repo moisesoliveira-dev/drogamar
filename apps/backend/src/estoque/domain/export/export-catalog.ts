@@ -340,6 +340,89 @@ export const EXPORT_TYPE_CATALOG: Record<StockExportType, ExportTypeMeta> = {
     defaultSortDir: 'asc',
     filterKeys: ['search', 'active'],
   },
+  ONLINE_STORE: {
+    type: 'ONLINE_STORE',
+    label: 'Loja online',
+    description: 'Produtos e status de publicação/sincronização da F4.',
+    formats: ['XLSX', 'CSV'],
+    columns: [
+      {
+        id: 'code',
+        label: 'Código',
+        group: 'Produto',
+        defaultSelected: true,
+      },
+      {
+        id: 'description',
+        label: 'Produto',
+        group: 'Produto',
+        defaultSelected: true,
+      },
+      { id: 'sku', label: 'SKU', group: 'Produto', defaultSelected: true },
+      {
+        id: 'integrationStatus',
+        label: 'Status',
+        group: 'Loja',
+        defaultSelected: true,
+      },
+      {
+        id: 'publishStatus',
+        label: 'Publicação',
+        group: 'Loja',
+        defaultSelected: true,
+      },
+      {
+        id: 'syncStatus',
+        label: 'Sincronização',
+        group: 'Loja',
+        defaultSelected: true,
+      },
+      {
+        id: 'storePrice',
+        label: 'Preço loja',
+        group: 'Loja',
+        defaultSelected: true,
+      },
+      {
+        id: 'availableStock',
+        label: 'Estoque disponível',
+        group: 'Estoque',
+        defaultSelected: true,
+      },
+      {
+        id: 'publishedStock',
+        label: 'Estoque publicado',
+        group: 'Estoque',
+        defaultSelected: true,
+      },
+      {
+        id: 'channelName',
+        label: 'Canal',
+        group: 'Loja',
+        defaultSelected: true,
+      },
+      {
+        id: 'lastSyncedAt',
+        label: 'Última sincronização',
+        group: 'Loja',
+        defaultSelected: false,
+      },
+      {
+        id: 'errorMessage',
+        label: 'Erro',
+        group: 'Loja',
+        defaultSelected: false,
+      },
+    ],
+    sortOptions: [
+      { id: 'description', label: 'Produto' },
+      { id: 'code', label: 'Código' },
+      { id: 'integrationStatus', label: 'Status' },
+    ],
+    defaultSortBy: 'description',
+    defaultSortDir: 'asc',
+    filterKeys: ['search', 'status', 'publish', 'sync'],
+  },
 };
 
 export function getExportTypeMeta(type: StockExportType): ExportTypeMeta {

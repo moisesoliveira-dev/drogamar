@@ -7,6 +7,7 @@ import {
   estimateLotValueAtRisk,
   formatExpiryStatusLabel,
   isWithinAttention,
+  toUtcDateOnly,
   type ExpiryStatusKind,
 } from '../../domain/expiry-classification';
 import type {
@@ -15,6 +16,10 @@ import type {
   ExportLotsFilters,
   ExportCategoriesFilters,
 } from '../../domain/export/export-types';
+import {
+  resolveIntegrationStatus,
+  friendlySyncError,
+} from '../../domain/online-store/online-store.types';
 import type {
   ExportQuery,
   ExportRow,
@@ -61,6 +66,17 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
         });
       case 'LOTS_EXPIRY':
         return this.countLots(query.filters as ExportLotsFilters);
+      case 'ONLINE_STORE':
+        return (
+          await this.fetchOnlineStoreRows(
+            {
+              ...query,
+              columns: [],
+              maxRecords: 100_000,
+            },
+            true,
+          )
+        ).length;
       default:
         return 0;
     }
@@ -76,9 +92,116 @@ export class PrismaStockExportDataSource implements StockExportDataSource {
         return this.fetchCategories(query);
       case 'LOTS_EXPIRY':
         return this.fetchLots(query);
+      case 'ONLINE_STORE':
+        return this.fetchOnlineStoreRows(query, false);
       default:
         return [];
     }
+  }
+
+  private async fetchOnlineStoreRows(
+    query: ExportQuery,
+    countOnly: boolean,
+  ): Promise<ExportRow[]> {
+    const channel = await this.prisma.salesChannel.findFirst({
+      where: { isDefault: true, connectionStatus: 'CONNECTED' },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!channel) return [];
+
+    const filters = query.filters as {
+      search?: string;
+      status?: string;
+      publish?: string;
+      sync?: string;
+    };
+
+    const where: Prisma.StockItemWhereInput = {
+      itemType: { in: ['PRODUCT', 'OTHER'] },
+    };
+    const search = filters.search?.trim();
+    if (search) {
+      where.OR = [
+        { code: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const items = await this.prisma.stockItem.findMany({
+      where,
+      include: {
+        onlineListings: { where: { channelId: channel.id }, take: 1 },
+      },
+      orderBy: { description: 'asc' },
+      take: countOnly ? undefined : query.maxRecords,
+    });
+
+    const today = toUtcDateOnly(new Date());
+    const rows: ExportRow[] = [];
+
+    for (const item of items) {
+      const listing = item.onlineListings[0] ?? null;
+      const physical = decimalToNumber(item.currentStock) ?? 0;
+      let available = physical;
+      if (item.trackExpiry) {
+        const agg = await this.prisma.stockLot.aggregate({
+          where: {
+            itemId: item.id,
+            expiryDate: { gte: today },
+            quantity: { gt: 0 },
+          },
+          _sum: { quantity: true },
+        });
+        available = Math.max(0, decimalToNumber(agg._sum.quantity) ?? 0);
+      }
+
+      const integrationStatus = resolveIntegrationStatus({
+        itemStatus: item.status,
+        publishStatus: listing?.publishStatus ?? null,
+        syncStatus: listing?.syncStatus ?? null,
+      });
+      const publishStatus = listing?.publishStatus ?? 'NOT_PUBLISHED';
+      const syncStatus = listing?.syncStatus ?? null;
+
+      if (filters.status && filters.status !== 'ALL' && integrationStatus !== filters.status) {
+        continue;
+      }
+      if (filters.publish && filters.publish !== 'ALL' && publishStatus !== filters.publish) {
+        continue;
+      }
+      if (filters.sync && filters.sync !== 'ALL' && (syncStatus ?? 'PENDING') !== filters.sync) {
+        continue;
+      }
+
+      const storePrice =
+        listing && !listing.useErpPrice
+          ? decimalToNumber(listing.priceOverride)
+          : decimalToNumber(item.salePrice);
+
+      rows.push(
+        this.pick(query.columns, {
+          code: item.code,
+          description: item.description,
+          sku: item.sku,
+          integrationStatus,
+          publishStatus,
+          syncStatus,
+          storePrice,
+          availableStock: available,
+          publishedStock: decimalToNumber(listing?.publishedStockQty),
+          channelName: channel.name,
+          lastSyncedAt: formatDateTime(listing?.lastSyncedAt),
+          errorMessage:
+            listing?.lastErrorMessage ??
+            (listing?.lastErrorCode
+              ? friendlySyncError(listing.lastErrorCode)
+              : null),
+        }),
+      );
+    }
+
+    return rows;
   }
 
   private itemsWhere(filters: ExportItemsFilters): Prisma.StockItemWhereInput {

@@ -218,7 +218,8 @@ export function isSupportedExportType(value: string): value is StockExportType {
     value === 'ITEMS' ||
     value === 'LOTS_EXPIRY' ||
     value === 'CURRENT_STOCK' ||
-    value === 'CATEGORIES'
+    value === 'CATEGORIES' ||
+    value === 'ONLINE_STORE'
   );
 }
 
