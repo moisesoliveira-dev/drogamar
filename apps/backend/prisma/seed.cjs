@@ -258,6 +258,12 @@ async function main() {
     },
   ];
 
+  await prisma.cashRegister.upsert({
+    where: { code: 'CX-01' },
+    update: { name: 'Caixa 01', active: true },
+    create: { code: 'CX-01', name: 'Caixa 01', active: true },
+  });
+
   for (const customer of customers) {
     await prisma.customer.upsert({
       where: { code: customer.code },

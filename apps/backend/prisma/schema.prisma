@@ -38,6 +38,8 @@ model User {
   stockExports       StockExportJob[]
   onlineStoreSyncJobs OnlineStoreSyncJob[]
   saleCarts          SaleCart[]
+  cashSessions       CashSession[]
+  cashMovements      CashMovement[]
 
   @@index([email])
   @@map("users")
@@ -375,7 +377,18 @@ enum CustomerDocumentType {
 enum SaleCartStatus {
   OPEN
   CHECKOUT_PENDING
+  HELD
   CLOSED
+  CANCELLED
+}
+
+/// Meios habilitados no PDV. Novos valores só entram com integração real.
+enum SalePaymentMethod {
+  CASH
+}
+
+enum SalePaymentStatus {
+  CONFIRMED
   CANCELLED
 }
 
@@ -399,6 +412,72 @@ model Customer {
   @@map("customers")
 }
 
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum CashMovementType {
+  SANGRIA
+  SUPRIMENTO
+}
+
+model CashRegister {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  name      String
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  sessions  CashSession[]
+
+  @@index([active])
+  @@map("cash_registers")
+}
+
+model CashSession {
+  id             String            @id @default(cuid())
+  registerId     String
+  register       CashRegister      @relation(fields: [registerId], references: [id], onDelete: Restrict)
+  operatorId     String
+  operator       User              @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  status         CashSessionStatus @default(OPEN)
+  openingAmount  Decimal           @db.Decimal(18, 4)
+  closingAmount  Decimal?          @db.Decimal(18, 4)
+  expectedAmount Decimal?          @db.Decimal(18, 4)
+  difference     Decimal?          @db.Decimal(18, 4)
+  notes          String?
+  closingNotes   String?
+  openedAt       DateTime          @default(now())
+  closedAt       DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  movements      CashMovement[]
+
+  @@index([registerId, status])
+  @@index([operatorId, status])
+  @@index([status])
+  @@map("cash_sessions")
+}
+
+/// Preparado para sangria/suprimento — fluxo completo na F4 futura.
+model CashMovement {
+  id         String           @id @default(cuid())
+  sessionId  String
+  session    CashSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  operatorId String
+  operator   User             @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  type       CashMovementType
+  amount     Decimal          @db.Decimal(18, 4)
+  reason     String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([sessionId])
+  @@index([type])
+  @@map("cash_movements")
+}
+
 model SaleCart {
   id              String         @id @default(cuid())
   sequentialId    Int            @unique @default(autoincrement())
@@ -411,14 +490,64 @@ model SaleCart {
   cartSurcharge   Decimal        @default(0) @db.Decimal(18, 4)
   notes           String?
   lastValidatedAt DateTime?
+  closedAt        DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   items           SaleCartItem[]
+  payments        SalePayment[]
+  receipt         SaleReceipt?
 
   @@index([operatorId, status])
   @@index([customerId])
   @@index([status])
   @@map("sale_carts")
+}
+
+model SalePayment {
+  id             String            @id @default(cuid())
+  cartId         String
+  cart           SaleCart          @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  receiptId      String?
+  receipt        SaleReceipt?      @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+  method         SalePaymentMethod
+  /// Valor aplicado à venda (não inclui troco).
+  amount         Decimal           @db.Decimal(18, 4)
+  /// Valor recebido do cliente (dinheiro).
+  tenderedAmount Decimal?          @db.Decimal(18, 4)
+  changeAmount   Decimal           @default(0) @db.Decimal(18, 4)
+  status         SalePaymentStatus @default(CONFIRMED)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([cartId])
+  @@index([receiptId])
+  @@index([method])
+  @@map("sale_payments")
+}
+
+model SaleReceipt {
+  id             String        @id @default(cuid())
+  cartId         String        @unique
+  cart           SaleCart      @relation(fields: [cartId], references: [id], onDelete: Restrict)
+  sequentialId   Int
+  operatorId     String
+  customerId     String?
+  subtotal       Decimal       @db.Decimal(18, 4)
+  discounts      Decimal       @db.Decimal(18, 4)
+  surcharges     Decimal       @db.Decimal(18, 4)
+  total          Decimal       @db.Decimal(18, 4)
+  amountPaid     Decimal       @db.Decimal(18, 4)
+  changeAmount   Decimal       @default(0) @db.Decimal(18, 4)
+  idempotencyKey String        @unique
+  closedAt       DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  payments       SalePayment[]
+
+  @@index([operatorId])
+  @@index([sequentialId])
+  @@index([closedAt])
+  @@map("sale_receipts")
 }
 
 model SaleCartItem {
