@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { EstoqueModule } from './estoque/estoque.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { VendasModule } from './vendas/vendas.module';
+import { FinanceiroModule } from './financeiro/financeiro.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { VendasModule } from './vendas/vendas.module';
     AuthModule,
     EstoqueModule,
     VendasModule,
+    FinanceiroModule,
   ],
   controllers: [AppController],
   providers: [
