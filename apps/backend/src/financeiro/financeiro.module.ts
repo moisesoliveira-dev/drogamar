@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { ContasPagarService } from './application/services/contas-pagar.service';
 import { ContasReceberService } from './application/services/contas-receber.service';
+import { ContasPagarController } from './presentation/contas-pagar.controller';
 import { ContasReceberController } from './presentation/contas-receber.controller';
 
 @Module({
   imports: [AuthModule],
-  controllers: [ContasReceberController],
-  providers: [ContasReceberService],
-  exports: [ContasReceberService],
+  controllers: [ContasReceberController, ContasPagarController],
+  providers: [ContasReceberService, ContasPagarService],
+  exports: [ContasReceberService, ContasPagarService],
 })
 export class FinanceiroModule {}
