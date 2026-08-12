@@ -679,6 +679,16 @@ export class FluxoCaixaService {
     };
   }
 
+  async getAccountBalance(bankAccountId: string): Promise<number> {
+    const rows = await this.prisma.cashFlowMovement.findMany({
+      where: { bankAccountId, status: 'REALIZED' },
+      select: { direction: true, amount: true },
+    });
+    return roundMoney(
+      rows.reduce((sum, m) => sum + netEffect(m.direction, dec(m.amount)), 0),
+    );
+  }
+
   async createManual(
     operatorId: string,
     input: {
@@ -692,6 +702,7 @@ export class FluxoCaixaService {
       origin?: string;
       notes?: string | null;
       idempotencyKey?: string | null;
+      kind?: CashFlowKind;
     },
   ) {
     if (input.idempotencyKey) {
@@ -718,21 +729,29 @@ export class FluxoCaixaService {
       );
     }
 
-    const bankAccountId = await this.ledger.resolveDefaultBankAccountId(
-      this.prisma,
-      input.bankAccountId,
-    );
+    const bankAccount = await this.prisma.bankAccount.findFirst({
+      where: { id: input.bankAccountId, active: true },
+      select: { id: true },
+    });
+    if (!bankAccount) {
+      throw new CashFlowValidationError(
+        'Conta bancária inválida ou inativa.',
+        'INVALID_BANK_ACCOUNT',
+      );
+    }
+
+    const kind = (input.kind ?? 'MANUAL') satisfies CashFlowKind;
 
     const created = await this.prisma.$transaction(async (tx) => {
       const movement = await tx.cashFlowMovement.create({
         data: {
           direction: input.direction,
-          kind: 'MANUAL' satisfies CashFlowKind,
+          kind,
           status: 'REALIZED',
           amount,
           occurredAt: toUtcDateOnly(input.occurredAt),
           description: input.description.trim(),
-          bankAccountId,
+          bankAccountId: bankAccount.id,
           categoryId: input.categoryId || null,
           costCenterId: input.costCenterId || null,
           origin: (input.origin as CashFlowOrigin) || 'MANUAL',
@@ -745,9 +764,12 @@ export class FluxoCaixaService {
         data: {
           movementId: movement.id,
           actorId: operatorId,
-          action: 'CREATE_MANUAL',
+          action: kind === 'ADJUSTMENT' ? 'ADJUST_BALANCE' : 'CREATE_MANUAL',
           amount,
-          message: 'Movimentação manual criada.',
+          message:
+            kind === 'ADJUSTMENT'
+              ? 'Ajuste de saldo.'
+              : 'Movimentação manual criada.',
         },
       });
       return movement.id;
@@ -765,8 +787,17 @@ export class FluxoCaixaService {
       toBankAccountId: string;
       description?: string | null;
       notes?: string | null;
+      idempotencyKey?: string | null;
+      allowNegative?: boolean;
     },
   ) {
+    if (input.idempotencyKey) {
+      const existing = await this.prisma.cashFlowMovement.findUnique({
+        where: { idempotencyKey: input.idempotencyKey },
+      });
+      if (existing) return this.getById(existing.id);
+    }
+
     const amount = roundMoney(input.amount);
     if (amount <= 0) {
       throw new CashFlowValidationError('Valor inválido.', 'INVALID_AMOUNT');
@@ -793,6 +824,14 @@ export class FluxoCaixaService {
       );
     }
 
+    const balance = await this.getAccountBalance(fromAcc.id);
+    if (!input.allowNegative && amount > balance + 0.0001) {
+      throw new CashFlowValidationError(
+        'Saldo insuficiente na conta de origem.',
+        'INSUFFICIENT_BALANCE',
+      );
+    }
+
     const transferGroupId = randomUUID();
     const occurredAt = toUtcDateOnly(input.occurredAt);
     const description =
@@ -813,6 +852,7 @@ export class FluxoCaixaService {
           transferGroupId,
           notes: input.notes?.trim() || null,
           operatorId,
+          idempotencyKey: input.idempotencyKey || null,
         },
       });
       const inn = await tx.cashFlowMovement.create({
@@ -852,6 +892,75 @@ export class FluxoCaixaService {
     });
 
     return this.getById(outId);
+  }
+
+  async adjustBalance(
+    operatorId: string,
+    input: {
+      bankAccountId: string;
+      targetBalance?: number;
+      difference?: number;
+      reason: string;
+      occurredAt: string;
+      notes?: string | null;
+      idempotencyKey?: string | null;
+    },
+  ) {
+    if (!input.reason?.trim()) {
+      throw new CashFlowValidationError(
+        'Informe o motivo do ajuste.',
+        'REASON_REQUIRED',
+      );
+    }
+
+    const bankAccount = await this.prisma.bankAccount.findFirst({
+      where: { id: input.bankAccountId, active: true },
+      select: { id: true },
+    });
+    if (!bankAccount) {
+      throw new CashFlowValidationError(
+        'Conta bancária inválida ou inativa.',
+        'INVALID_BANK_ACCOUNT',
+      );
+    }
+
+    const currentBalance = await this.getAccountBalance(bankAccount.id);
+    let difference: number;
+    if (input.difference != null && Number.isFinite(input.difference)) {
+      difference = roundMoney(input.difference);
+    } else if (
+      input.targetBalance != null &&
+      Number.isFinite(input.targetBalance)
+    ) {
+      difference = roundMoney(input.targetBalance - currentBalance);
+    } else {
+      throw new CashFlowValidationError(
+        'Informe o saldo alvo ou a diferença.',
+        'ADJUST_VALUE_REQUIRED',
+      );
+    }
+
+    if (Math.abs(difference) < 0.0001) {
+      throw new CashFlowValidationError(
+        'Diferença de ajuste é zero.',
+        'ZERO_ADJUSTMENT',
+      );
+    }
+
+    const direction: 'IN' | 'OUT' = difference > 0 ? 'IN' : 'OUT';
+    const amount = roundMoney(Math.abs(difference));
+
+    return this.createManual(operatorId, {
+      direction,
+      amount,
+      occurredAt: input.occurredAt,
+      description: `Ajuste de saldo: ${input.reason.trim()}`,
+      bankAccountId: bankAccount.id,
+      notes: input.notes?.trim() || null,
+      idempotencyKey: input.idempotencyKey || null,
+      kind: 'ADJUSTMENT',
+      origin: 'MANUAL',
+    });
   }
 
   async cancelMovement(operatorId: string, id: string, reason: string) {

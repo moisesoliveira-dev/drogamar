@@ -180,6 +180,11 @@ export class CreateTransferDto {
   @IsString()
   @MaxLength(1000)
   notes?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  idempotencyKey?: string | null;
 }
 
 export class CashFlowReasonDto {
