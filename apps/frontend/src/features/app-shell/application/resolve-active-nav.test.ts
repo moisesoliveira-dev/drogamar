@@ -12,7 +12,8 @@ describe('resolveActiveNav', () => {
   it('usa dashboard do módulo em rota base', () => {
     const active = resolveActiveNav('/app/financeiro')
     expect(active.module?.id).toBe('financeiro')
-    expect(active.item?.path).toBe('/app/financeiro')
+    expect(active.item?.id).toBe('contas-receber')
+    expect(active.item?.code).toBe('F1')
   })
 
   it('resolve início em /app', () => {
