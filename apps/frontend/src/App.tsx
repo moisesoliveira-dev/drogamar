@@ -1,159 +1,165 @@
-import { QueryClientProvider } from '@tanstack/react-query'
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import {
   GuestOnlyRoute,
   ProtectedRoute,
-} from './features/auth/containers/AuthRouteGuards'
-import { queryClient } from './shared/lib/query-client'
+} from "./features/auth/containers/AuthRouteGuards";
+import { queryClient } from "./shared/lib/query-client";
 
 const LoginPageContainer = lazy(() =>
-  import('./features/auth/containers/LoginPageContainer').then((m) => ({
+  import("./features/auth/containers/LoginPageContainer").then((m) => ({
     default: m.LoginPageContainer,
   })),
-)
+);
 
 const AppShellContainer = lazy(() =>
-  import('./features/app-shell').then((m) => ({
+  import("./features/app-shell").then((m) => ({
     default: m.AppShellContainer,
   })),
-)
+);
 
 const ModulePlaceholderPage = lazy(() =>
-  import('./features/app-shell').then((m) => ({
+  import("./features/app-shell").then((m) => ({
     default: m.ModulePlaceholderPage,
   })),
-)
+);
 
 const ItemsListContainer = lazy(() =>
-  import('./features/estoque-itens').then((m) => ({
+  import("./features/estoque-itens").then((m) => ({
     default: m.ItemsListContainer,
   })),
-)
+);
 
 const ItemFormContainer = lazy(() =>
-  import('./features/estoque-itens').then((m) => ({
+  import("./features/estoque-itens").then((m) => ({
     default: m.ItemFormContainer,
   })),
-)
+);
 
 const ItemDetailContainer = lazy(() =>
-  import('./features/estoque-itens').then((m) => ({
+  import("./features/estoque-itens").then((m) => ({
     default: m.ItemDetailContainer,
   })),
-)
+);
 
 const ExpiryAlertsContainer = lazy(() =>
-  import('./features/estoque-validade').then((m) => ({
+  import("./features/estoque-validade").then((m) => ({
     default: m.ExpiryAlertsContainer,
   })),
-)
+);
 
 const ExportacaoContainer = lazy(() =>
-  import('./features/estoque-exportacao').then((m) => ({
+  import("./features/estoque-exportacao").then((m) => ({
     default: m.ExportacaoContainer,
   })),
-)
+);
 
 const LojaOnlineContainer = lazy(() =>
-  import('./features/estoque-loja-online').then((m) => ({
+  import("./features/estoque-loja-online").then((m) => ({
     default: m.LojaOnlineContainer,
   })),
-)
+);
 
 const CarrinhoContainer = lazy(() =>
-  import('./features/vendas-carrinho').then((m) => ({
+  import("./features/vendas-carrinho").then((m) => ({
     default: m.CarrinhoContainer,
   })),
-)
+);
 
 const CodigoBarrasContainer = lazy(() =>
-  import('./features/vendas-codigo-barras').then((m) => ({
+  import("./features/vendas-codigo-barras").then((m) => ({
     default: m.CodigoBarrasContainer,
   })),
-)
+);
 
 const PagamentosContainer = lazy(() =>
-  import('./features/vendas-pagamentos').then((m) => ({
+  import("./features/vendas-pagamentos").then((m) => ({
     default: m.PagamentosContainer,
   })),
-)
+);
 
 const BalcaoContainer = lazy(() =>
-  import('./features/vendas-balcao').then((m) => ({
+  import("./features/vendas-balcao").then((m) => ({
     default: m.BalcaoContainer,
   })),
-)
+);
 
 const BuscaIaContainer = lazy(() =>
-  import('./features/vendas-busca-ia').then((m) => ({
+  import("./features/vendas-busca-ia").then((m) => ({
     default: m.BuscaIaContainer,
   })),
-)
+);
 
 const DescontosContainer = lazy(() =>
-  import('./features/vendas-descontos').then((m) => ({
+  import("./features/vendas-descontos").then((m) => ({
     default: m.DescontosContainer,
   })),
-)
+);
 
 const ContasReceberContainer = lazy(() =>
-  import('./features/financeiro-contas-receber').then((m) => ({
+  import("./features/financeiro-contas-receber").then((m) => ({
     default: m.ContasReceberContainer,
   })),
-)
+);
 
 const ContasPagarContainer = lazy(() =>
-  import('./features/financeiro-contas-pagar').then((m) => ({
+  import("./features/financeiro-contas-pagar").then((m) => ({
     default: m.ContasPagarContainer,
   })),
-)
+);
 
 const FluxoCaixaContainer = lazy(() =>
-  import('./features/financeiro-fluxo-caixa').then((m) => ({
+  import("./features/financeiro-fluxo-caixa").then((m) => ({
     default: m.FluxoCaixaContainer,
   })),
-)
+);
+
+const CaixaBancosContainer = lazy(() =>
+  import("./features/financeiro-caixa-bancos").then((m) => ({
+    default: m.CaixaBancosContainer,
+  })),
+);
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
       style={{
-        minHeight: '100svh',
-        display: 'grid',
-        placeItems: 'center',
+        minHeight: "100svh",
+        display: "grid",
+        placeItems: "center",
         padding: 24,
-        color: 'var(--fm-text)',
-        background: 'var(--fm-surface)',
+        color: "var(--fm-text)",
+        background: "var(--fm-surface)",
       }}
     >
-      <p style={{ margin: 0, color: 'var(--fm-muted)' }}>{title}</p>
+      <p style={{ margin: 0, color: "var(--fm-muted)" }}>{title}</p>
     </main>
-  )
+  );
 }
 
 function RouteFallback() {
   return (
     <main
       style={{
-        minHeight: '100svh',
-        display: 'grid',
-        placeItems: 'center',
-        background: 'var(--fm-surface)',
-        color: 'var(--fm-muted)',
+        minHeight: "100svh",
+        display: "grid",
+        placeItems: "center",
+        background: "var(--fm-surface)",
+        color: "var(--fm-muted)",
       }}
     >
       Carregando…
     </main>
-  )
+  );
 }
 
 function ItemCreatePage() {
-  return <ItemFormContainer mode="create" />
+  return <ItemFormContainer mode="create" />;
 }
 
 function ItemEditPage() {
-  return <ItemFormContainer mode="edit" />
+  return <ItemFormContainer mode="edit" />;
 }
 
 export default function App() {
@@ -330,7 +336,9 @@ export default function App() {
               />
               <Route
                 path="financeiro"
-                element={<Navigate to="/app/financeiro/contas-receber" replace />}
+                element={
+                  <Navigate to="/app/financeiro/contas-receber" replace />
+                }
               />
               <Route
                 path="financeiro/contas-receber"
@@ -357,6 +365,14 @@ export default function App() {
                 }
               />
               <Route
+                path="financeiro/caixa-bancos"
+                element={
+                  <Suspense fallback={null}>
+                    <CaixaBancosContainer />
+                  </Suspense>
+                }
+              />
+              <Route
                 path="*"
                 element={
                   <Suspense fallback={null}>
@@ -371,5 +387,5 @@ export default function App() {
         </Suspense>
       </BrowserRouter>
     </QueryClientProvider>
-  )
+  );
 }
