@@ -73,6 +73,18 @@ const CodigoBarrasContainer = lazy(() =>
   })),
 )
 
+const PagamentosContainer = lazy(() =>
+  import('./features/vendas-pagamentos').then((m) => ({
+    default: m.PagamentosContainer,
+  })),
+)
+
+const BalcaoContainer = lazy(() =>
+  import('./features/vendas-balcao').then((m) => ({
+    default: m.BalcaoContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -251,6 +263,22 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <CodigoBarrasContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="vendas/pagamentos"
+                element={
+                  <Suspense fallback={null}>
+                    <PagamentosContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="vendas/balcao"
+                element={
+                  <Suspense fallback={null}>
+                    <BalcaoContainer />
                   </Suspense>
                 }
               />
