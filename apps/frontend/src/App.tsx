@@ -109,6 +109,12 @@ const ContasPagarContainer = lazy(() =>
   })),
 )
 
+const FluxoCaixaContainer = lazy(() =>
+  import('./features/financeiro-fluxo-caixa').then((m) => ({
+    default: m.FluxoCaixaContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -339,6 +345,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <ContasPagarContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="financeiro/fluxo-caixa"
+                element={
+                  <Suspense fallback={null}>
+                    <FluxoCaixaContainer />
                   </Suspense>
                 }
               />

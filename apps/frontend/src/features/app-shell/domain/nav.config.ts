@@ -112,7 +112,8 @@ export const appModules: NavModuleConfig[] = [
         label: 'Fluxo de Caixa',
         code: 'F3',
         path: '/app/financeiro/fluxo-caixa',
-        description: 'Movimentação de caixa.',
+        description:
+          'Acompanhe as entradas, saídas e projeções financeiras da empresa.',
       },
       {
         id: 'conciliacao',
