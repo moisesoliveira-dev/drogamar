@@ -46,6 +46,10 @@ export class SetCartDiscountDto {
   @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0)
   cartDiscount!: number;
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
 }
 
 export class SearchQueryDto {

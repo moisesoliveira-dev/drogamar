@@ -26,8 +26,10 @@ import {
   CashSessionConflictError,
   CashSessionRequiredError,
   CustomerNotFoundError,
+  DiscountApprovalRequiredError,
   ProductNotFoundError,
 } from '../domain/cart/errors';
+import { ApproveCartDiscountDto } from './dto/promocao.dto';
 import {
   AddCartItemDto,
   BarcodeLookupDto,
@@ -103,7 +105,26 @@ export class CarrinhoController {
     @Body() body: SetCartDiscountDto,
   ) {
     try {
-      return await this.cart.setCartDiscount(user.id, body.cartDiscount);
+      return await this.cart.setCartDiscount(user.id, body.cartDiscount, {
+        reason: body.reason,
+      });
+    } catch (error) {
+      this.rethrow(error);
+    }
+  }
+
+  @Post('carrinho/desconto/aprovar')
+  @HttpCode(200)
+  async approveDiscount(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Body() body: ApproveCartDiscountDto,
+  ) {
+    try {
+      return await this.cart.approveCartDiscount(
+        user.id,
+        body.cartDiscount,
+        body.reason,
+      );
     } catch (error) {
       this.rethrow(error);
     }
@@ -181,6 +202,15 @@ export class CarrinhoController {
   }
 
   private rethrow(error: unknown): never {
+    if (error instanceof DiscountApprovalRequiredError) {
+      throw new BadRequestException({
+        code: error.code,
+        message: error.message,
+        requested: error.payload.requested,
+        limitPercent: error.payload.limitPercent,
+        itemsGross: error.payload.itemsGross,
+      });
+    }
     if (
       error instanceof CartValidationError ||
       error instanceof CashSessionRequiredError ||

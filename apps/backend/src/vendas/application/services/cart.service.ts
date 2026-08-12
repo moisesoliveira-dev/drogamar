@@ -17,9 +17,15 @@ import {
   CartNotFoundError,
   CartValidationError,
   CustomerNotFoundError,
+  DiscountApprovalRequiredError,
   ProductNotFoundError,
 } from '../../domain/cart/errors';
+import {
+  manualDiscountNeedsApproval,
+  OPERATOR_MANUAL_DISCOUNT_LIMIT_PERCENT,
+} from '../../domain/promocoes/apply-promotions';
 import { CaixaService } from './caixa.service';
+import { PromocaoService } from './promocao.service';
 
 function dec(value: unknown): number {
   if (value == null) return 0;
@@ -49,6 +55,12 @@ const cartInclude = {
     },
     orderBy: { createdAt: 'asc' as const },
   },
+  appliedPromotions: {
+    include: {
+      promotion: { select: { id: true, name: true, type: true } },
+    },
+    orderBy: { createdAt: 'asc' as const },
+  },
 } satisfies Prisma.SaleCartInclude;
 
 type CartEntity = Prisma.SaleCartGetPayload<{ include: typeof cartInclude }>;
@@ -67,6 +79,7 @@ export class CartService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly caixa: CaixaService,
+    private readonly promocoes: PromocaoService,
   ) {}
 
   async getOrCreateOpenCart(operatorId: string) {
@@ -213,6 +226,8 @@ export class CartService {
       data: {
         quantity,
         lineDiscount,
+        lineDiscountManual:
+          input.lineDiscount == null ? undefined : lineDiscount > 0,
         unitPrice,
         unitCode:
           product.saleUnit?.code ?? product.measureUnit?.code ?? line.unitCode,
@@ -254,7 +269,11 @@ export class CartService {
     return this.getFreshMapped(cart.id);
   }
 
-  async setCartDiscount(operatorId: string, cartDiscount: number) {
+  async setCartDiscount(
+    operatorId: string,
+    cartDiscount: number,
+    opts?: { reason?: string; approved?: boolean },
+  ) {
     await this.caixa.requireOpen(operatorId);
     if (!Number.isFinite(cartDiscount) || cartDiscount < 0) {
       throw new CartValidationError(
@@ -282,21 +301,93 @@ export class CartService {
       );
     }
 
+    if (
+      cartDiscount > 0 &&
+      !opts?.approved &&
+      manualDiscountNeedsApproval(
+        cartDiscount,
+        totals.itemsGross,
+        OPERATOR_MANUAL_DISCOUNT_LIMIT_PERCENT,
+      )
+    ) {
+      await this.prisma.promotionAuditLog.create({
+        data: {
+          actorId: operatorId,
+          action: 'MANUAL_DISCOUNT_PENDING',
+          beforeJson: { cartDiscount: dec(cart.cartDiscount) },
+          afterJson: {
+            cartDiscount,
+            reason: opts?.reason ?? null,
+            limitPercent: OPERATOR_MANUAL_DISCOUNT_LIMIT_PERCENT,
+          },
+        },
+      });
+      throw new DiscountApprovalRequiredError(
+        `Desconto solicitado acima do limite do operador (${OPERATOR_MANUAL_DISCOUNT_LIMIT_PERCENT}%).`,
+        {
+          requested: cartDiscount,
+          limitPercent: OPERATOR_MANUAL_DISCOUNT_LIMIT_PERCENT,
+          itemsGross: totals.itemsGross,
+        },
+      );
+    }
+
+    if (cartDiscount > 0 && opts?.approved && !opts.reason?.trim()) {
+      throw new CartValidationError(
+        'Informe o motivo do desconto para aprovação.',
+        'DISCOUNT_REASON_REQUIRED',
+      );
+    }
+
     await this.prisma.saleCart.update({
       where: { id: cart.id },
-      data: { cartDiscount },
+      data: {
+        cartDiscount,
+        cartDiscountManual: cartDiscount > 0,
+      },
+    });
+
+    await this.prisma.promotionAuditLog.create({
+      data: {
+        actorId: operatorId,
+        action: opts?.approved ? 'MANUAL_DISCOUNT_APPROVED' : 'MANUAL_DISCOUNT',
+        beforeJson: { cartDiscount: dec(cart.cartDiscount) },
+        afterJson: {
+          cartDiscount,
+          reason: opts?.reason ?? null,
+        },
+      },
     });
 
     return this.getFreshMapped(cart.id);
+  }
+
+  async approveCartDiscount(
+    operatorId: string,
+    cartDiscount: number,
+    reason: string,
+  ) {
+    return this.setCartDiscount(operatorId, cartDiscount, {
+      reason,
+      approved: true,
+    });
   }
 
   async clear(operatorId: string) {
     await this.caixa.requireOpen(operatorId);
     const cart = await this.ensureOpenCart(operatorId);
     await this.prisma.saleCartItem.deleteMany({ where: { cartId: cart.id } });
+    await this.prisma.saleCartAppliedPromotion.deleteMany({
+      where: { cartId: cart.id },
+    });
     await this.prisma.saleCart.update({
       where: { id: cart.id },
-      data: { cartDiscount: 0, cartSurcharge: 0, customerId: null },
+      data: {
+        cartDiscount: 0,
+        cartDiscountManual: false,
+        cartSurcharge: 0,
+        customerId: null,
+      },
     });
     return this.getFreshMapped(cart.id);
   }
@@ -641,6 +732,13 @@ export class CartService {
       }
     }
 
+    await this.promocoes.applyToCart(cart);
+    const afterPromo = await this.prisma.saleCart.findUnique({
+      where: { id: cart.id },
+      include: cartInclude,
+    });
+    if (afterPromo) cart = afterPromo;
+
     const lineInputs = cart.items.map((item) => {
       const currentSalePrice = decOrNull(item.stockItem.salePrice);
       return {
@@ -723,6 +821,7 @@ export class CartService {
           quantity,
           unitPrice,
           lineDiscount,
+          lineDiscountManual: item.lineDiscountManual,
           lineSubtotal: lineSubtotal(quantity, unitPrice, lineDiscount),
           availableStock,
           trackStock: item.stockItem.trackStock,
@@ -731,8 +830,26 @@ export class CartService {
           outOfStock: item.stockItem.trackStock && availableStock < quantity,
           invalidPrice: currentSalePrice == null || currentSalePrice <= 0,
           issues: lineIssues,
+          appliedPromotions: cart.appliedPromotions
+            .filter((row) => row.lineId === item.id)
+            .map((row) => ({
+              promotionId: row.promotionId,
+              name: row.promotion.name,
+              type: row.promotion.type,
+              amount: dec(row.amount),
+              lineId: row.lineId,
+            })),
         };
       }),
+      appliedPromotions: cart.appliedPromotions.map((row) => ({
+        promotionId: row.promotionId,
+        name: row.promotion.name,
+        type: row.promotion.type,
+        amount: dec(row.amount),
+        lineId: row.lineId,
+      })),
+      cartDiscountManual: cart.cartDiscountManual,
+      operatorDiscountLimitPercent: OPERATOR_MANUAL_DISCOUNT_LIMIT_PERCENT,
       totals: {
         subtotal: totals.subtotal,
         discounts: totals.discounts,

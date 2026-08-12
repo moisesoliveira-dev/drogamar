@@ -71,3 +71,36 @@ export class CashSessionConflictError extends Error {
     this.name = 'CashSessionConflictError';
   }
 }
+
+export class PromotionNotFoundError extends Error {
+  constructor(message = 'Promoção não encontrada.') {
+    super(message);
+    this.name = 'PromotionNotFoundError';
+  }
+}
+
+export class PromotionValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
+    super(message);
+    this.name = 'PromotionValidationError';
+  }
+}
+
+export class DiscountApprovalRequiredError extends Error {
+  readonly code = 'DISCOUNT_NEEDS_APPROVAL';
+
+  constructor(
+    message: string,
+    public readonly payload: {
+      requested: number;
+      limitPercent: number;
+      itemsGross: number;
+    },
+  ) {
+    super(message);
+    this.name = 'DiscountApprovalRequiredError';
+  }
+}
