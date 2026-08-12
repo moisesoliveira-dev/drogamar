@@ -44,6 +44,8 @@ services:
       EXPORT_MAX_RECORDS: ${EXPORT_MAX_RECORDS:-50000}
       EXPORT_SYNC_THRESHOLD: ${EXPORT_SYNC_THRESHOLD:-1000}
       EXPORT_MAX_CONCURRENT_PER_USER: ${EXPORT_MAX_CONCURRENT_PER_USER:-2}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
     volumes:
       - exports_data:/app/apps/backend/storage/exports
     depends_on:
