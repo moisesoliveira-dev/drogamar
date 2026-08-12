@@ -2,7 +2,10 @@ import {
   addCartItemRequest,
   clearCartRequest,
   getCartRequest,
+  holdCartRequest,
+  listHeldCartsRequest,
   removeCartItemRequest,
+  resumeHeldCartRequest,
   searchCustomersRequest,
   searchProductsRequest,
   setCartCustomerRequest,
@@ -55,4 +58,16 @@ export async function searchProductsAction(search?: string, page = 1) {
 
 export async function searchCustomersAction(search?: string, page = 1) {
   return searchCustomersRequest({ search, page })
+}
+
+export async function holdCartAction() {
+  return holdCartRequest()
+}
+
+export async function listHeldCartsAction() {
+  return listHeldCartsRequest()
+}
+
+export async function resumeHeldCartAction(cartId: string) {
+  return resumeHeldCartRequest(cartId)
 }

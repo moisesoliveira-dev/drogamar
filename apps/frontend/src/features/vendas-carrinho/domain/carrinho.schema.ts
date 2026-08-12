@@ -8,6 +8,9 @@ export const vendasCarrinhoConfig = {
   discountPath: '/api/vendas/carrinho/desconto',
   clearPath: '/api/vendas/carrinho/limpar',
   validatePaymentPath: '/api/vendas/carrinho/validar-pagamento',
+  holdPath: '/api/vendas/carrinho/suspender',
+  heldPath: '/api/vendas/carrinho/suspensos',
+  resumePath: '/api/vendas/carrinho/retomar',
   customersPath: '/api/vendas/clientes',
   productsPath: '/api/vendas/produtos',
 } as const
@@ -94,6 +97,10 @@ export const productSearchItemSchema = z.object({
   unitCode: z.string().nullable(),
   hasValidPrice: z.boolean(),
   outOfStock: z.boolean(),
+})
+
+export const heldCartsSchema = z.object({
+  items: z.array(cartSchema),
 })
 
 export const productSearchSchema = z.object({

@@ -6,6 +6,7 @@ import {
 import {
   cartSchema,
   customerSearchSchema,
+  heldCartsSchema,
   productSearchSchema,
   vendasCarrinhoConfig,
   type SaleCart,
@@ -112,6 +113,29 @@ export async function setCartDiscountRequest(
 export async function clearCartRequest(): Promise<SaleCart> {
   const response = await request(vendasCarrinhoConfig.clearPath, {
     method: 'POST',
+  })
+  if (!response.ok) await mapError(response)
+  return cartSchema.parse(await response.json())
+}
+
+export async function holdCartRequest(): Promise<SaleCart> {
+  const response = await request(vendasCarrinhoConfig.holdPath, {
+    method: 'POST',
+  })
+  if (!response.ok) await mapError(response)
+  return cartSchema.parse(await response.json())
+}
+
+export async function listHeldCartsRequest() {
+  const response = await request(vendasCarrinhoConfig.heldPath)
+  if (!response.ok) await mapError(response)
+  return heldCartsSchema.parse(await response.json())
+}
+
+export async function resumeHeldCartRequest(cartId: string): Promise<SaleCart> {
+  const response = await request(vendasCarrinhoConfig.resumePath, {
+    method: 'POST',
+    body: JSON.stringify({ cartId }),
   })
   if (!response.ok) await mapError(response)
   return cartSchema.parse(await response.json())
