@@ -293,16 +293,22 @@ async function main() {
   }
 
   for (const account of [
-    ['CX-GERAL', 'Caixa Geral', null],
-    ['BB-001', 'Conta Corrente BB', 'Banco do Brasil'],
+    ['CX-GERAL', 'Caixa Geral', null, 'CASH'],
+    ['BB-001', 'Conta Corrente BB', 'Banco do Brasil', 'CHECKING'],
   ]) {
     await prisma.bankAccount.upsert({
       where: { code: account[0] },
-      update: { name: account[1], bankName: account[2], active: true },
+      update: {
+        name: account[1],
+        bankName: account[2],
+        kind: account[3],
+        active: true,
+      },
       create: {
         code: account[0],
         name: account[1],
         bankName: account[2],
+        kind: account[3],
         active: true,
       },
     });
@@ -599,8 +605,159 @@ async function main() {
     }
   }
 
+  const cxGeral = await prisma.bankAccount.findUnique({
+    where: { code: 'CX-GERAL' },
+  });
+  const bb001 = await prisma.bankAccount.findUnique({ where: { code: 'BB-001' } });
+  const adminUser = await prisma.user.findUnique({ where: { email } });
+
+  if (adminUser && cxGeral) {
+    const hasOpening = await prisma.cashFlowMovement.findFirst({
+      where: {
+        bankAccountId: cxGeral.id,
+        kind: 'ADJUSTMENT',
+        direction: 'IN',
+      },
+    });
+    if (!hasOpening) {
+      const openingDate = new Date(
+        Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1),
+      );
+      await prisma.cashFlowMovement.create({
+        data: {
+          direction: 'IN',
+          kind: 'ADJUSTMENT',
+          status: 'REALIZED',
+          amount: 15000,
+          occurredAt: openingDate,
+          description: 'Saldo inicial — Caixa Geral',
+          bankAccountId: cxGeral.id,
+          origin: 'OTHER',
+          operatorId: adminUser.id,
+        },
+      });
+      if (bb001) {
+        await prisma.cashFlowMovement.create({
+          data: {
+            direction: 'IN',
+            kind: 'ADJUSTMENT',
+            status: 'REALIZED',
+            amount: 25000,
+            occurredAt: openingDate,
+            description: 'Saldo inicial — Conta Corrente BB',
+            bankAccountId: bb001.id,
+            origin: 'OTHER',
+            operatorId: adminUser.id,
+          },
+        });
+      }
+    }
+
+    const receiptsWithoutCf = await prisma.receivableMovement.findMany({
+      where: {
+        type: 'RECEIPT',
+        cashFlowMovement: null,
+      },
+      include: {
+        receivable: { select: { description: true, document: true, costCenterId: true, bankAccountId: true } },
+      },
+    });
+    for (const receipt of receiptsWithoutCf) {
+      await prisma.cashFlowMovement.create({
+        data: {
+          direction: 'IN',
+          kind: 'RECEIPT',
+          status: 'REALIZED',
+          amount: receipt.amount,
+          occurredAt: receipt.paidAt,
+          description: receipt.receivable.description,
+          bankAccountId:
+            receipt.bankAccountId ||
+            receipt.receivable.bankAccountId ||
+            cxGeral.id,
+          costCenterId: receipt.receivable.costCenterId,
+          origin: 'RECEIVABLE',
+          originRef: receipt.receivable.document,
+          receivableMovementId: receipt.id,
+          notes: receipt.notes,
+          operatorId: receipt.operatorId,
+        },
+      });
+    }
+
+    const paymentsWithoutCf = await prisma.payableMovement.findMany({
+      where: {
+        type: 'PAYMENT',
+        cashFlowMovement: null,
+      },
+      include: {
+        payable: {
+          select: {
+            description: true,
+            document: true,
+            categoryId: true,
+            costCenterId: true,
+            bankAccountId: true,
+          },
+        },
+      },
+    });
+    for (const payment of paymentsWithoutCf) {
+      await prisma.cashFlowMovement.create({
+        data: {
+          direction: 'OUT',
+          kind: 'PAYMENT',
+          status: 'REALIZED',
+          amount: payment.amount,
+          occurredAt: payment.paidAt,
+          description: payment.payable.description,
+          bankAccountId:
+            payment.bankAccountId ||
+            payment.payable.bankAccountId ||
+            cxGeral.id,
+          categoryId: payment.payable.categoryId,
+          costCenterId: payment.payable.costCenterId,
+          origin: 'PAYABLE',
+          originRef: payment.payable.document,
+          payableMovementId: payment.id,
+          notes: payment.notes,
+          operatorId: payment.operatorId,
+        },
+      });
+    }
+
+    const hasManualSample = await prisma.cashFlowMovement.findFirst({
+      where: {
+        kind: 'MANUAL',
+        description: 'Aporte de capital — seed',
+      },
+    });
+    if (!hasManualSample) {
+      await prisma.cashFlowMovement.create({
+        data: {
+          direction: 'IN',
+          kind: 'MANUAL',
+          status: 'REALIZED',
+          amount: 500,
+          occurredAt: new Date(
+            Date.UTC(
+              new Date().getUTCFullYear(),
+              new Date().getUTCMonth(),
+              new Date().getUTCDate(),
+            ),
+          ),
+          description: 'Aporte de capital — seed',
+          bankAccountId: cxGeral.id,
+          origin: 'MANUAL',
+          operatorId: adminUser.id,
+          notes: 'Movimentação manual de exemplo',
+        },
+      });
+    }
+  }
+
   console.log(
-    `Seed OK: usuário ${email}, lookups, lotes, clientes, fornecedores e contas a pagar/receber disponíveis.`,
+    `Seed OK: usuário ${email}, lookups, lotes, clientes, fornecedores, contas a pagar/receber e fluxo de caixa disponíveis.`,
   );
 }
 

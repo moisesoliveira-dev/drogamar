@@ -48,6 +48,8 @@ model User {
   payableMovements   PayableMovement[]
   payableAudits      PayableAuditLog[]
   payableApprovals   PayableApproval[] @relation("PayableApprover")
+  cashFlowMovements  CashFlowMovement[]
+  cashFlowAudits     CashFlowAuditLog[]
 
   @@index([email])
   @@map("users")
@@ -737,11 +739,19 @@ model FinancePaymentMethod {
   @@map("finance_payment_methods")
 }
 
+enum BankAccountKind {
+  CASH
+  CHECKING
+  BANK
+  OTHER
+}
+
 model BankAccount {
   id          String               @id @default(cuid())
   code        String
   name        String
   bankName    String?
+  kind        BankAccountKind      @default(OTHER)
   active      Boolean              @default(true)
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
@@ -749,6 +759,7 @@ model BankAccount {
   movements   ReceivableMovement[]
   payables    AccountPayable[]
   payableMovements PayableMovement[]
+  cashFlowMovements CashFlowMovement[]
 
   @@unique([code])
   @@map("bank_accounts")
@@ -763,6 +774,7 @@ model CostCenter {
   updatedAt   DateTime            @updatedAt
   receivables AccountReceivable[]
   payables    AccountPayable[]
+  cashFlowMovements CashFlowMovement[]
 
   @@unique([code])
   @@map("cost_centers")
@@ -858,6 +870,7 @@ model ReceivableMovement {
   reversesMovementId String?
   reversesMovement   ReceivableMovement?  @relation("ReceivableReversal", fields: [reversesMovementId], references: [id], onDelete: SetNull)
   reversedBy         ReceivableMovement[] @relation("ReceivableReversal")
+  cashFlowMovement   CashFlowMovement?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
@@ -960,6 +973,7 @@ model ExpenseCategory {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   payables  AccountPayable[]
+  cashFlowMovements CashFlowMovement[]
 
   @@unique([code])
   @@map("expense_categories")
@@ -1063,6 +1077,7 @@ model PayableMovement {
   reversesMovementId String?
   reversesMovement   PayableMovement?     @relation("PayableReversal", fields: [reversesMovementId], references: [id], onDelete: SetNull)
   reversedBy         PayableMovement[]    @relation("PayableReversal")
+  cashFlowMovement   CashFlowMovement?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
@@ -1123,4 +1138,95 @@ model PayableAuditLog {
   @@index([payableId, createdAt])
   @@index([actorId])
   @@map("payable_audit_logs")
+}
+
+enum CashFlowDirection {
+  IN
+  OUT
+}
+
+enum CashFlowKind {
+  RECEIPT
+  PAYMENT
+  MANUAL
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum CashFlowStatus {
+  REALIZED
+  REVERSED
+  CANCELLED
+}
+
+enum CashFlowOrigin {
+  SALE
+  PURCHASE
+  RECEIVABLE
+  PAYABLE
+  TRANSFER
+  MANUAL
+  OTHER
+}
+
+model CashFlowMovement {
+  id                     String             @id @default(cuid())
+  sequentialId           Int                @unique @default(autoincrement())
+  direction              CashFlowDirection
+  kind                   CashFlowKind
+  status                 CashFlowStatus     @default(REALIZED)
+  amount                 Decimal            @db.Decimal(18, 4)
+  occurredAt             DateTime           @db.Date
+  description            String
+  bankAccountId          String
+  bankAccount            BankAccount        @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+  categoryId             String?
+  category               ExpenseCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  costCenterId           String?
+  costCenter             CostCenter?        @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  origin                 CashFlowOrigin     @default(MANUAL)
+  originRef              String?
+  receivableMovementId   String?            @unique
+  receivableMovement     ReceivableMovement? @relation(fields: [receivableMovementId], references: [id], onDelete: SetNull)
+  payableMovementId      String?            @unique
+  payableMovement        PayableMovement?   @relation(fields: [payableMovementId], references: [id], onDelete: SetNull)
+  transferGroupId        String?
+  notes                  String?
+  operatorId             String
+  operator               User               @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  idempotencyKey         String?            @unique
+  reversesMovementId     String?
+  reversesMovement       CashFlowMovement?  @relation("CashFlowReversal", fields: [reversesMovementId], references: [id], onDelete: SetNull)
+  reversedBy             CashFlowMovement[] @relation("CashFlowReversal")
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  auditLogs              CashFlowAuditLog[]
+
+  @@index([occurredAt])
+  @@index([bankAccountId, occurredAt])
+  @@index([direction, status])
+  @@index([kind, status])
+  @@index([origin])
+  @@index([categoryId])
+  @@index([costCenterId])
+  @@index([transferGroupId])
+  @@index([operatorId])
+  @@map("cash_flow_movements")
+}
+
+model CashFlowAuditLog {
+  id           String            @id @default(cuid())
+  movementId   String?
+  movement     CashFlowMovement? @relation(fields: [movementId], references: [id], onDelete: SetNull)
+  actorId      String
+  actor        User              @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action       String
+  amount       Decimal?          @db.Decimal(18, 4)
+  message      String?
+  payloadJson  Json?
+  createdAt    DateTime          @default(now())
+
+  @@index([movementId, createdAt])
+  @@index([actorId])
+  @@map("cash_flow_audit_logs")
 }
