@@ -23,12 +23,15 @@ import {
   CartItemNotFoundError,
   CartNotFoundError,
   CartValidationError,
+  CashSessionConflictError,
+  CashSessionRequiredError,
   CustomerNotFoundError,
   ProductNotFoundError,
 } from '../domain/cart/errors';
 import {
   AddCartItemDto,
   BarcodeLookupDto,
+  ResumeHeldCartDto,
   SearchQueryDto,
   SetCartDiscountDto,
   SetCustomerDto,
@@ -126,6 +129,34 @@ export class CarrinhoController {
     }
   }
 
+  @Post('carrinho/suspender')
+  @HttpCode(200)
+  async hold(@CurrentUser() user: AuthenticatedRequestUser) {
+    try {
+      return await this.cart.hold(user.id);
+    } catch (error) {
+      this.rethrow(error);
+    }
+  }
+
+  @Get('carrinho/suspensos')
+  listHeld(@CurrentUser() user: AuthenticatedRequestUser) {
+    return this.cart.listHeld(user.id);
+  }
+
+  @Post('carrinho/retomar')
+  @HttpCode(200)
+  async resume(
+    @CurrentUser() user: AuthenticatedRequestUser,
+    @Body() body: ResumeHeldCartDto,
+  ) {
+    try {
+      return await this.cart.resume(user.id, body.cartId);
+    } catch (error) {
+      this.rethrow(error);
+    }
+  }
+
   @Get('clientes')
   searchCustomers(@Query() query: SearchQueryDto) {
     return this.cart.searchCustomers(
@@ -150,7 +181,11 @@ export class CarrinhoController {
   }
 
   private rethrow(error: unknown): never {
-    if (error instanceof CartValidationError) {
+    if (
+      error instanceof CartValidationError ||
+      error instanceof CashSessionRequiredError ||
+      error instanceof CashSessionConflictError
+    ) {
       throw new BadRequestException({
         code: error.code,
         message: error.message,

@@ -67,6 +67,11 @@ export class SearchQueryDto {
   pageSize?: number = 20;
 }
 
+export class ResumeHeldCartDto {
+  @IsString()
+  cartId!: string;
+}
+
 export class BarcodeLookupDto {
   @IsString()
   @MinLength(1)

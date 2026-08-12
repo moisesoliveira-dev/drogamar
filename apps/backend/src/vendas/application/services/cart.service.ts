@@ -19,6 +19,7 @@ import {
   CustomerNotFoundError,
   ProductNotFoundError,
 } from '../../domain/cart/errors';
+import { CaixaService } from './caixa.service';
 
 function dec(value: unknown): number {
   if (value == null) return 0;
@@ -63,11 +64,17 @@ export class CartService {
    */
   private readonly mergeDuplicateLineItems = true;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly caixa: CaixaService,
+  ) {}
 
   async getOrCreateOpenCart(operatorId: string) {
     let cart = await this.prisma.saleCart.findFirst({
-      where: { operatorId, status: 'OPEN' },
+      where: {
+        operatorId,
+        status: { in: ['OPEN', 'CHECKOUT_PENDING'] },
+      },
       include: cartInclude,
       orderBy: { createdAt: 'desc' },
     });
@@ -75,6 +82,13 @@ export class CartService {
     if (!cart) {
       cart = await this.prisma.saleCart.create({
         data: { operatorId, status: 'OPEN' },
+        include: cartInclude,
+      });
+    } else if (cart.status === 'CHECKOUT_PENDING') {
+      // Edição no F1/F2 reabre o carrinho para nova validação no F3.
+      cart = await this.prisma.saleCart.update({
+        where: { id: cart.id },
+        data: { status: 'OPEN' },
         include: cartInclude,
       });
     }
@@ -86,6 +100,7 @@ export class CartService {
     operatorId: string,
     input: { stockItemId: string; quantity?: number },
   ) {
+    await this.caixa.requireOpen(operatorId);
     const quantity = input.quantity ?? 1;
     const qtyIssue = validateCartLineQuantity(quantity);
     if (qtyIssue) {
@@ -147,6 +162,7 @@ export class CartService {
     lineId: string,
     input: { quantity?: number; lineDiscount?: number },
   ) {
+    await this.caixa.requireOpen(operatorId);
     const cart = await this.ensureOpenCart(operatorId);
     const line = cart.items.find((i) => i.id === lineId);
     if (!line) throw new CartItemNotFoundError();
@@ -210,6 +226,7 @@ export class CartService {
   }
 
   async removeItem(operatorId: string, lineId: string) {
+    await this.caixa.requireOpen(operatorId);
     const cart = await this.ensureOpenCart(operatorId);
     const line = cart.items.find((i) => i.id === lineId);
     if (!line) throw new CartItemNotFoundError();
@@ -219,6 +236,7 @@ export class CartService {
   }
 
   async setCustomer(operatorId: string, customerId: string | null) {
+    await this.caixa.requireOpen(operatorId);
     const cart = await this.ensureOpenCart(operatorId);
 
     if (customerId) {
@@ -237,6 +255,7 @@ export class CartService {
   }
 
   async setCartDiscount(operatorId: string, cartDiscount: number) {
+    await this.caixa.requireOpen(operatorId);
     if (!Number.isFinite(cartDiscount) || cartDiscount < 0) {
       throw new CartValidationError(
         'Desconto do carrinho inválido.',
@@ -272,6 +291,7 @@ export class CartService {
   }
 
   async clear(operatorId: string) {
+    await this.caixa.requireOpen(operatorId);
     const cart = await this.ensureOpenCart(operatorId);
     await this.prisma.saleCartItem.deleteMany({ where: { cartId: cart.id } });
     await this.prisma.saleCart.update({
@@ -286,6 +306,7 @@ export class CartService {
    * Não altera estoque nem cria pagamento.
    */
   async validateForPayment(operatorId: string) {
+    await this.caixa.requireOpen(operatorId);
     const cart = await this.ensureOpenCart(operatorId);
     const refreshed = await this.refreshAndMap(cart, {
       softConcurrency: false,
@@ -395,6 +416,70 @@ export class CartService {
     };
   }
 
+  async hold(operatorId: string) {
+    await this.caixa.requireOpen(operatorId);
+    const cart = await this.ensureOpenCart(operatorId);
+    if (cart.items.length === 0) {
+      throw new CartValidationError(
+        'Não há itens para suspender.',
+        'EMPTY_CART',
+      );
+    }
+    await this.prisma.saleCart.update({
+      where: { id: cart.id },
+      data: { status: 'HELD' },
+    });
+    return this.getOrCreateOpenCart(operatorId);
+  }
+
+  async listHeld(operatorId: string) {
+    const rows = await this.prisma.saleCart.findMany({
+      where: { operatorId, status: 'HELD' },
+      include: cartInclude,
+      orderBy: { updatedAt: 'desc' },
+    });
+    const items = await Promise.all(
+      rows.map((row) => this.refreshAndMap(row, { softConcurrency: true })),
+    );
+    return { items };
+  }
+
+  async resume(operatorId: string, cartId: string) {
+    await this.caixa.requireOpen(operatorId);
+    const held = await this.prisma.saleCart.findFirst({
+      where: { id: cartId, operatorId, status: 'HELD' },
+      include: cartInclude,
+    });
+    if (!held) throw new CartNotFoundError('Venda suspensa não encontrada.');
+
+    const current = await this.prisma.saleCart.findFirst({
+      where: {
+        operatorId,
+        status: { in: ['OPEN', 'CHECKOUT_PENDING'] },
+      },
+      include: { items: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (current && current.items.length > 0) {
+      await this.prisma.saleCart.update({
+        where: { id: current.id },
+        data: { status: 'HELD' },
+      });
+    } else if (current) {
+      await this.prisma.saleCart.update({
+        where: { id: current.id },
+        data: { status: 'CANCELLED' },
+      });
+    }
+
+    await this.prisma.saleCart.update({
+      where: { id: held.id },
+      data: { status: 'OPEN' },
+    });
+    return this.getOrCreateOpenCart(operatorId);
+  }
+
   /**
    * Busca exata por código de barras (F2). Inclui inativos para feedback de UI.
    * Fallback: código interno ou SKU com match exato (case-insensitive).
@@ -448,13 +533,22 @@ export class CartService {
 
   private async ensureOpenCart(operatorId: string): Promise<CartEntity> {
     let cart = await this.prisma.saleCart.findFirst({
-      where: { operatorId, status: 'OPEN' },
+      where: {
+        operatorId,
+        status: { in: ['OPEN', 'CHECKOUT_PENDING'] },
+      },
       include: cartInclude,
       orderBy: { createdAt: 'desc' },
     });
     if (!cart) {
       cart = await this.prisma.saleCart.create({
         data: { operatorId, status: 'OPEN' },
+        include: cartInclude,
+      });
+    } else if (cart.status === 'CHECKOUT_PENDING') {
+      cart = await this.prisma.saleCart.update({
+        where: { id: cart.id },
+        data: { status: 'OPEN' },
         include: cartInclude,
       });
     }
