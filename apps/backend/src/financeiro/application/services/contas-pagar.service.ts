@@ -14,6 +14,7 @@ import {
   resolvePersistedStatus,
   toUtcDateOnly,
 } from '../../domain/receivable/receivable-money';
+import { CashFlowLedgerService } from './cash-flow-ledger.service';
 
 function dec(value: unknown): number {
   if (value == null) return 0;
@@ -83,7 +84,10 @@ export class ContasPagarService {
   /** Valores >= limiar exigem aprovação antes do pagamento. */
   private readonly approvalAmountThreshold = 10_000;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cashFlowLedger: CashFlowLedgerService,
+  ) {}
 
   async getLookups() {
     const [paymentMethods, bankAccounts, costCenters, categories] =
@@ -576,7 +580,7 @@ export class ContasPagarService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.payableMovement.create({
+      const paymentMovement = await tx.payableMovement.create({
         data: {
           payableId,
           installmentId: input.installmentId || null,
@@ -592,6 +596,22 @@ export class ContasPagarService {
           operatorId,
           idempotencyKey: input.idempotencyKey || null,
         },
+      });
+
+      await this.cashFlowLedger.recordFromPayablePayment(tx, {
+        payableMovementId: paymentMovement.id,
+        amount: input.amount,
+        occurredAt: input.paidAt,
+        description: row.description,
+        bankAccountId: input.bankAccountId || row.bankAccountId,
+        categoryId: row.categoryId,
+        costCenterId: row.costCenterId,
+        operatorId,
+        originRef: row.document || payableId,
+        notes: input.notes,
+        idempotencyKey: input.idempotencyKey
+          ? `cf:${input.idempotencyKey}`
+          : null,
       });
 
       const newPaid = dec(row.paidAmount) + input.amount;
@@ -716,6 +736,12 @@ export class ContasPagarService {
           operatorId,
           reversesMovementId: movement.id,
         },
+      });
+
+      await this.cashFlowLedger.reverseLinkedMovement(tx, {
+        payableMovementId: movement.id,
+        operatorId,
+        reason: reason.trim(),
       });
 
       const newPaid = Math.max(0, dec(row.paidAmount) - dec(movement.amount));
