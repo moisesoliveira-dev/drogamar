@@ -35,3 +35,39 @@ export class CustomerNotFoundError extends Error {
     this.name = 'CustomerNotFoundError';
   }
 }
+
+export class PaymentValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
+    super(message);
+    this.name = 'PaymentValidationError';
+  }
+}
+
+export class ReceiptNotFoundError extends Error {
+  constructor(message = 'Comprovante não encontrado.') {
+    super(message);
+    this.name = 'ReceiptNotFoundError';
+  }
+}
+
+export class CashSessionRequiredError extends Error {
+  constructor(message = 'Abra o caixa para iniciar vendas.') {
+    super(message);
+    this.name = 'CashSessionRequiredError';
+    this.code = 'CASH_SESSION_REQUIRED';
+  }
+  readonly code: string;
+}
+
+export class CashSessionConflictError extends Error {
+  constructor(
+    message: string,
+    public readonly code = 'CASH_SESSION_CONFLICT',
+  ) {
+    super(message);
+    this.name = 'CashSessionConflictError';
+  }
+}
