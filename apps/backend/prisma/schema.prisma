@@ -40,6 +40,7 @@ model User {
   saleCarts          SaleCart[]
   cashSessions       CashSession[]
   cashMovements      CashMovement[]
+  promotionAudits    PromotionAuditLog[]
 
   @@index([email])
   @@map("users")
@@ -486,16 +487,18 @@ model SaleCart {
   operator        User           @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   customerId      String?
   customer        Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  cartDiscount    Decimal        @default(0) @db.Decimal(18, 4)
-  cartSurcharge   Decimal        @default(0) @db.Decimal(18, 4)
-  notes           String?
-  lastValidatedAt DateTime?
-  closedAt        DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  items           SaleCartItem[]
-  payments        SalePayment[]
-  receipt         SaleReceipt?
+  cartDiscount         Decimal                    @default(0) @db.Decimal(18, 4)
+  cartDiscountManual   Boolean                    @default(false)
+  cartSurcharge        Decimal                    @default(0) @db.Decimal(18, 4)
+  notes                String?
+  lastValidatedAt      DateTime?
+  closedAt             DateTime?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  items                SaleCartItem[]
+  payments             SalePayment[]
+  receipt              SaleReceipt?
+  appliedPromotions    SaleCartAppliedPromotion[]
 
   @@index([operatorId, status])
   @@index([customerId])
@@ -559,6 +562,7 @@ model SaleCartItem {
   quantity           Decimal   @db.Decimal(18, 4)
   unitPrice          Decimal   @db.Decimal(18, 4)
   lineDiscount       Decimal   @default(0) @db.Decimal(18, 4)
+  lineDiscountManual Boolean   @default(false)
   unitCode           String?
   productCode        String
   productDescription String
@@ -570,4 +574,113 @@ model SaleCartItem {
   @@index([cartId])
   @@index([stockItemId])
   @@map("sale_cart_items")
+}
+
+enum PromotionType {
+  PERCENT
+  FIXED
+  PROMO_PRICE
+  MIN_PURCHASE
+}
+
+enum PromotionScope {
+  ALL
+  PRODUCTS
+  CATEGORIES
+  BRANDS
+}
+
+enum PromotionStacking {
+  STACKABLE
+  EXCLUSIVE
+}
+
+enum PromotionStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  CANCELLED
+}
+
+enum PromotionTargetKind {
+  PRODUCT
+  CATEGORY
+  BRAND
+}
+
+model Promotion {
+  id            String             @id @default(cuid())
+  name          String
+  description   String?
+  type          PromotionType
+  scope         PromotionScope     @default(ALL)
+  stacking      PromotionStacking  @default(EXCLUSIVE)
+  status        PromotionStatus    @default(DRAFT)
+  priority      Int                @default(100)
+  percentOff    Decimal?           @db.Decimal(18, 4)
+  amountOff     Decimal?           @db.Decimal(18, 4)
+  promoPrice    Decimal?           @db.Decimal(18, 4)
+  minCartValue  Decimal?           @db.Decimal(18, 4)
+  minQuantity   Decimal?           @db.Decimal(18, 4)
+  maxQtyPerSale Decimal?           @db.Decimal(18, 4)
+  startsAt      DateTime
+  endsAt        DateTime
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  targets       PromotionTarget[]
+  audits        PromotionAuditLog[]
+  applications  SaleCartAppliedPromotion[]
+
+  @@index([status])
+  @@index([startsAt, endsAt])
+  @@index([priority])
+  @@map("promotions")
+}
+
+model PromotionTarget {
+  id           String              @id @default(cuid())
+  promotionId  String
+  promotion    Promotion           @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  kind         PromotionTargetKind
+  targetId     String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([promotionId, kind, targetId])
+  @@index([targetId])
+  @@map("promotion_targets")
+}
+
+model PromotionAuditLog {
+  id           String     @id @default(cuid())
+  promotionId  String?
+  promotion    Promotion? @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  actorId      String
+  actor        User       @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action       String
+  beforeJson   Json?
+  afterJson    Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([promotionId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("promotion_audit_logs")
+}
+
+model SaleCartAppliedPromotion {
+  id           String    @id @default(cuid())
+  cartId       String
+  cart         SaleCart  @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  promotionId  String
+  promotion    Promotion @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  lineId       String?
+  amount       Decimal   @db.Decimal(18, 4)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([cartId])
+  @@index([promotionId])
+  @@map("sale_cart_applied_promotions")
 }
