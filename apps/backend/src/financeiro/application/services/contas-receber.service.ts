@@ -19,6 +19,7 @@ import {
   toUtcDateOnly,
 } from '../../domain/receivable/receivable-money';
 import { CashFlowLedgerService } from './cash-flow-ledger.service';
+import { CollectionSyncService } from './collection-sync.service';
 
 function dec(value: unknown): number {
   if (value == null) return 0;
@@ -78,6 +79,7 @@ export class ContasReceberService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly collectionSync: CollectionSyncService,
     private readonly cashFlowLedger: CashFlowLedgerService,
   ) {}
 
@@ -636,7 +638,9 @@ export class ContasReceberService {
       });
     });
 
-    return this.getById(receivableId);
+    const detail = await this.getById(receivableId);
+    await this.collectionSync.syncCaseByReceivableId(receivableId);
+    return detail;
   }
 
   async reverseReceipt(
@@ -747,7 +751,9 @@ export class ContasReceberService {
       });
     });
 
-    return this.getById(receivableId);
+    const detail = await this.getById(receivableId);
+    await this.collectionSync.syncCaseByReceivableId(receivableId);
+    return detail;
   }
 
   async renegotiate(
@@ -858,7 +864,10 @@ export class ContasReceberService {
       return created.id;
     });
 
-    return this.getById(newId);
+    const detail = await this.getById(newId);
+    await this.collectionSync.syncCaseByReceivableId(receivableId);
+    await this.collectionSync.syncCaseByReceivableId(newId);
+    return detail;
   }
 
   async cancel(operatorId: string, receivableId: string, reason: string) {
@@ -892,7 +901,9 @@ export class ContasReceberService {
         },
       }),
     ]);
-    return this.getById(receivableId);
+    const detail = await this.getById(receivableId);
+    await this.collectionSync.syncCaseByReceivableId(receivableId);
+    return detail;
   }
 
   private async ensureLateCharges(id: string) {

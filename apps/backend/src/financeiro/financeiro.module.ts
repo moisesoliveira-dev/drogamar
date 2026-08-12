@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { CaixaBancosService } from './application/services/caixa-bancos.service';
 import { CashFlowLedgerService } from './application/services/cash-flow-ledger.service';
+import { CollectionSyncService } from './application/services/collection-sync.service';
 import { ContasPagarService } from './application/services/contas-pagar.service';
 import { ContasReceberService } from './application/services/contas-receber.service';
 import { FluxoCaixaService } from './application/services/fluxo-caixa.service';
@@ -24,12 +25,14 @@ import { FluxoCaixaController } from './presentation/fluxo-caixa.controller';
     CashFlowLedgerService,
     FluxoCaixaService,
     CaixaBancosService,
+    CollectionSyncService,
   ],
   exports: [
     ContasReceberService,
     ContasPagarService,
     FluxoCaixaService,
     CaixaBancosService,
+    CollectionSyncService,
   ],
 })
 export class FinanceiroModule {}
