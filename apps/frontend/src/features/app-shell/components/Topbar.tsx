@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -6,7 +7,6 @@ import {
   HelpIcon,
   LogoutIcon,
   MenuIcon,
-  SearchIcon,
   SettingsIcon,
 } from '../../../shared/ui/icons'
 import styles from './Topbar.module.css'
@@ -21,6 +21,7 @@ export type TopbarProps = {
   onToggleNav: () => void
   onLogout: () => void
   loggingOut?: boolean
+  search?: ReactNode
 }
 
 function initials(name: string) {
@@ -35,6 +36,7 @@ export function Topbar({
   onToggleNav,
   onLogout,
   loggingOut = false,
+  search,
 }: TopbarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuId = useId()
@@ -49,7 +51,7 @@ export function Topbar({
       }
     }
 
-    function onKeyDown(event: KeyboardEvent) {
+    function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === 'Escape') setMenuOpen(false)
     }
 
@@ -80,21 +82,7 @@ export function Topbar({
         </Link>
       </div>
 
-      <div className={styles.center}>
-        <div className={styles.search}>
-          <label className={styles.searchLabel} htmlFor="global-search">
-            Busca global
-          </label>
-          <SearchIcon className={styles.searchIcon} size={16} />
-          <input
-            id="global-search"
-            className={styles.searchInput}
-            type="search"
-            placeholder="Buscar no sistema..."
-            autoComplete="off"
-          />
-        </div>
-      </div>
+      <div className={styles.center}>{search}</div>
 
       <div className={styles.right}>
         <button

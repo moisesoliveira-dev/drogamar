@@ -7,6 +7,7 @@ import { AppShellLayout } from '../components/AppShellLayout'
 import { PrimarySidebar } from '../components/PrimarySidebar'
 import { SecondarySidebar } from '../components/SecondarySidebar'
 import { Topbar } from '../components/Topbar'
+import { GlobalSearchContainer } from './GlobalSearchContainer'
 
 export function AppShellContainer() {
   const location = useLocation()
@@ -58,6 +59,7 @@ export function AppShellContainer() {
           onToggleNav={handleToggleNav}
           onLogout={handleLogout}
           loggingOut={loggingOut}
+          search={<GlobalSearchContainer />}
         />
       }
       primarySidebar={

@@ -1,0 +1,131 @@
+.search {
+  position: relative;
+  width: min(420px, 100%);
+}
+
+.searchLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fm-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  width: 100%;
+  height: 34px;
+  padding: 0 12px 0 34px;
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-sm);
+  background: var(--fm-surface);
+  color: var(--fm-text);
+  font-size: 13px;
+}
+
+.searchInput::placeholder {
+  color: var(--fm-muted);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--fm-mid);
+  box-shadow: var(--fm-focus-ring);
+  background: var(--fm-white);
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: min(420px, 70vh);
+  overflow: auto;
+  padding: 8px;
+  background: var(--fm-white);
+  border: 1px solid var(--fm-border);
+  border-radius: var(--fm-radius-md, 8px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 10%);
+}
+
+.group {
+  margin-bottom: 6px;
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 6px 8px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fm-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.option,
+.optionActive {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--fm-radius-sm);
+  background: transparent;
+  color: var(--fm-text);
+  cursor: pointer;
+}
+
+.option:hover,
+.optionActive {
+  background: var(--fm-surface);
+}
+
+.optionTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.optionSub {
+  font-size: 11px;
+  color: var(--fm-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hint {
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 13px;
+  color: var(--fm-muted);
+}
+
+.footer {
+  margin: 4px 0 0;
+  padding: 6px 8px 2px;
+  font-size: 10px;
+  color: var(--fm-muted);
+  border-top: 1px solid var(--fm-border);
+}
