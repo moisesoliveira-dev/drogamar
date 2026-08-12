@@ -292,27 +292,47 @@ async function main() {
     });
   }
 
-  for (const account of [
-    ['CX-GERAL', 'Caixa Geral', null, 'CASH'],
-    ['BB-001', 'Conta Corrente BB', 'Banco do Brasil', 'CHECKING'],
-  ]) {
-    await prisma.bankAccount.upsert({
-      where: { code: account[0] },
-      update: {
-        name: account[1],
-        bankName: account[2],
-        kind: account[3],
-        active: true,
-      },
-      create: {
-        code: account[0],
-        name: account[1],
-        bankName: account[2],
-        kind: account[3],
-        active: true,
-      },
-    });
-  }
+  await prisma.bankAccount.upsert({
+    where: { code: 'CX-GERAL' },
+    update: {
+      name: 'Caixa Geral',
+      bankName: null,
+      kind: 'CASH',
+      active: true,
+    },
+    create: {
+      code: 'CX-GERAL',
+      name: 'Caixa Geral',
+      bankName: null,
+      kind: 'CASH',
+      active: true,
+    },
+  });
+
+  await prisma.bankAccount.upsert({
+    where: { code: 'BB-001' },
+    update: {
+      name: 'Conta Corrente BB',
+      bankName: 'Banco do Brasil',
+      kind: 'CHECKING',
+      agency: '1234-5',
+      accountNumber: '98765',
+      accountDigit: '4',
+      notes: 'Conta operacional principal',
+      active: true,
+    },
+    create: {
+      code: 'BB-001',
+      name: 'Conta Corrente BB',
+      bankName: 'Banco do Brasil',
+      kind: 'CHECKING',
+      agency: '1234-5',
+      accountNumber: '98765',
+      accountDigit: '4',
+      notes: 'Conta operacional principal',
+      active: true,
+    },
+  });
 
   for (const center of [
     ['ADM', 'Administrativo'],
