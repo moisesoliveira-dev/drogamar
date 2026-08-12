@@ -328,3 +328,12 @@ export function ShoppingCartIcon(props: IconProps) {
     </BaseIcon>
   )
 }
+
+export function SparkleIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 3l1.2 5.2L18 9.4l-4.8 1.2L12 16l-1.2-5.4L6 9.4l4.8-1.2z" />
+      <path d="M18.5 14.5l.6 2.4 2.4.6-2.4.6-.6 2.4-.6-2.4-2.4-.6 2.4-.6z" />
+    </BaseIcon>
+  )
+}
