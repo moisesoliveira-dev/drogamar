@@ -41,6 +41,13 @@ model User {
   cashSessions       CashSession[]
   cashMovements      CashMovement[]
   promotionAudits    PromotionAuditLog[]
+  receivablesCreated AccountReceivable[] @relation("ReceivableCreator")
+  receivableMovements ReceivableMovement[]
+  receivableAudits   ReceivableAuditLog[]
+  payablesCreated    AccountPayable[] @relation("PayableCreator")
+  payableMovements   PayableMovement[]
+  payableAudits      PayableAuditLog[]
+  payableApprovals   PayableApproval[] @relation("PayableApprover")
 
   @@index([email])
   @@map("users")
@@ -405,6 +412,7 @@ model Customer {
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
   carts        SaleCart[]
+  receivables  AccountReceivable[]
 
   @@unique([code])
   @@index([name])
@@ -683,4 +691,436 @@ model SaleCartAppliedPromotion {
   @@index([cartId])
   @@index([promotionId])
   @@map("sale_cart_applied_promotions")
+}
+
+enum ReceivableOrigin {
+  MANUAL
+  SALE
+  CONTRACT
+  OTHER
+}
+
+/// Status persistido. OPEN/PARTIAL derivados de vencimento viram DUE_TODAY/OVERDUE na leitura.
+enum ReceivableStatus {
+  OPEN
+  PARTIAL
+  SETTLED
+  CANCELLED
+  RENEGOTIATED
+}
+
+enum ReceivableInstallmentStatus {
+  OPEN
+  PARTIAL
+  SETTLED
+  CANCELLED
+}
+
+enum ReceivableMovementType {
+  RECEIPT
+  REVERSAL
+}
+
+model FinancePaymentMethod {
+  id           String               @id @default(cuid())
+  code         String
+  label        String
+  active       Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  receivables  AccountReceivable[]
+  movements    ReceivableMovement[]
+  payables     AccountPayable[]
+  payableMovements PayableMovement[]
+
+  @@unique([code])
+  @@map("finance_payment_methods")
+}
+
+model BankAccount {
+  id          String               @id @default(cuid())
+  code        String
+  name        String
+  bankName    String?
+  active      Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  receivables AccountReceivable[]
+  movements   ReceivableMovement[]
+  payables    AccountPayable[]
+  payableMovements PayableMovement[]
+
+  @@unique([code])
+  @@map("bank_accounts")
+}
+
+model CostCenter {
+  id          String              @id @default(cuid())
+  code        String
+  name        String
+  active      Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  receivables AccountReceivable[]
+  payables    AccountPayable[]
+
+  @@unique([code])
+  @@map("cost_centers")
+}
+
+model AccountReceivable {
+  id                 String                    @id @default(cuid())
+  sequentialId       Int                       @unique @default(autoincrement())
+  customerId         String
+  customer           Customer                  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  origin             ReceivableOrigin          @default(MANUAL)
+  originRef          String?
+  description        String
+  document           String?
+  issueDate          DateTime                  @db.Date
+  dueDate            DateTime                  @db.Date
+  originalAmount     Decimal                   @db.Decimal(18, 4)
+  discountAmount     Decimal                   @default(0) @db.Decimal(18, 4)
+  interestAmount     Decimal                   @default(0) @db.Decimal(18, 4)
+  fineAmount         Decimal                   @default(0) @db.Decimal(18, 4)
+  paidAmount         Decimal                   @default(0) @db.Decimal(18, 4)
+  status             ReceivableStatus          @default(OPEN)
+  paymentMethodId    String?
+  paymentMethod      FinancePaymentMethod?     @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  bankAccountId      String?
+  bankAccount        BankAccount?              @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  costCenterId       String?
+  costCenter         CostCenter?               @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  installmentCount   Int                       @default(1)
+  notes              String?
+  createdById        String
+  createdBy          User                      @relation("ReceivableCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  renegotiatedFromId String?
+  renegotiatedFrom   AccountReceivable?        @relation("ReceivableRenegotiation", fields: [renegotiatedFromId], references: [id], onDelete: SetNull)
+  renegotiatedTo     AccountReceivable[]       @relation("ReceivableRenegotiation")
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  installments       ReceivableInstallment[]
+  movements          ReceivableMovement[]
+  auditLogs          ReceivableAuditLog[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([origin])
+  @@index([document])
+  @@index([createdById])
+  @@map("account_receivables")
+}
+
+model ReceivableInstallment {
+  id             String                       @id @default(cuid())
+  receivableId   String
+  receivable     AccountReceivable            @relation(fields: [receivableId], references: [id], onDelete: Cascade)
+  number         Int
+  dueDate        DateTime                     @db.Date
+  amount         Decimal                      @db.Decimal(18, 4)
+  paidAmount     Decimal                      @default(0) @db.Decimal(18, 4)
+  discountAmount Decimal                      @default(0) @db.Decimal(18, 4)
+  interestAmount Decimal                      @default(0) @db.Decimal(18, 4)
+  fineAmount     Decimal                      @default(0) @db.Decimal(18, 4)
+  status         ReceivableInstallmentStatus  @default(OPEN)
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+  movements      ReceivableMovement[]
+
+  @@unique([receivableId, number])
+  @@index([dueDate])
+  @@index([status])
+  @@map("receivable_installments")
+}
+
+model ReceivableMovement {
+  id                 String               @id @default(cuid())
+  receivableId       String
+  receivable         AccountReceivable    @relation(fields: [receivableId], references: [id], onDelete: Cascade)
+  installmentId      String?
+  installment        ReceivableInstallment? @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+  type               ReceivableMovementType
+  amount             Decimal              @db.Decimal(18, 4)
+  paidAt             DateTime             @db.Date
+  paymentMethodId    String?
+  paymentMethod      FinancePaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  bankAccountId      String?
+  bankAccount        BankAccount?         @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  interestAmount     Decimal              @default(0) @db.Decimal(18, 4)
+  fineAmount         Decimal              @default(0) @db.Decimal(18, 4)
+  discountAmount     Decimal              @default(0) @db.Decimal(18, 4)
+  notes              String?
+  operatorId         String
+  operator           User                 @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  idempotencyKey     String?              @unique
+  reversesMovementId String?
+  reversesMovement   ReceivableMovement?  @relation("ReceivableReversal", fields: [reversesMovementId], references: [id], onDelete: SetNull)
+  reversedBy         ReceivableMovement[] @relation("ReceivableReversal")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([receivableId, createdAt])
+  @@index([installmentId])
+  @@index([operatorId])
+  @@index([type])
+  @@map("receivable_movements")
+}
+
+model ReceivableAuditLog {
+  id           String            @id @default(cuid())
+  receivableId String?
+  receivable   AccountReceivable? @relation(fields: [receivableId], references: [id], onDelete: SetNull)
+  actorId      String
+  actor        User              @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action       String
+  amount       Decimal?          @db.Decimal(18, 4)
+  message      String?
+  payloadJson  Json?
+  createdAt    DateTime          @default(now())
+
+  @@index([receivableId, createdAt])
+  @@index([actorId])
+  @@map("receivable_audit_logs")
+}
+
+enum SupplierDocumentType {
+  CPF
+  CNPJ
+  OTHER
+}
+
+enum PayableOrigin {
+  MANUAL
+  PURCHASE
+  PURCHASE_ORDER
+  CONTRACT
+  OTHER
+}
+
+enum PayableStatus {
+  OPEN
+  PARTIAL
+  SETTLED
+  CANCELLED
+  RENEGOTIATED
+}
+
+enum PayableInstallmentStatus {
+  OPEN
+  PARTIAL
+  SETTLED
+  CANCELLED
+}
+
+enum PayableMovementType {
+  PAYMENT
+  REVERSAL
+}
+
+enum PayableApprovalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayableScheduleStatus {
+  SCHEDULED
+  EXECUTED
+  CANCELLED
+}
+
+model Supplier {
+  id           String                @id @default(cuid())
+  code         String
+  name         String
+  documentType SupplierDocumentType?
+  document     String?
+  email        String?
+  phone        String?
+  active       Boolean               @default(true)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  payables     AccountPayable[]
+
+  @@unique([code])
+  @@index([name])
+  @@index([document])
+  @@index([active])
+  @@map("suppliers")
+}
+
+model ExpenseCategory {
+  id        String           @id @default(cuid())
+  code      String
+  name      String
+  active    Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  payables  AccountPayable[]
+
+  @@unique([code])
+  @@map("expense_categories")
+}
+
+model AccountPayable {
+  id                 String                 @id @default(cuid())
+  sequentialId       Int                    @unique @default(autoincrement())
+  supplierId         String
+  supplier           Supplier               @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  origin             PayableOrigin          @default(MANUAL)
+  originRef          String?
+  description        String
+  document           String?
+  categoryId         String?
+  category           ExpenseCategory?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  issueDate          DateTime               @db.Date
+  dueDate            DateTime               @db.Date
+  originalAmount     Decimal                @db.Decimal(18, 4)
+  discountAmount     Decimal                @default(0) @db.Decimal(18, 4)
+  interestAmount     Decimal                @default(0) @db.Decimal(18, 4)
+  fineAmount         Decimal                @default(0) @db.Decimal(18, 4)
+  paidAmount         Decimal                @default(0) @db.Decimal(18, 4)
+  status             PayableStatus          @default(OPEN)
+  approvalStatus     PayableApprovalStatus  @default(NONE)
+  requiresApproval   Boolean                @default(false)
+  paymentMethodId    String?
+  paymentMethod      FinancePaymentMethod?  @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  bankAccountId      String?
+  bankAccount        BankAccount?           @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  costCenterId       String?
+  costCenter         CostCenter?            @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  installmentCount   Int                    @default(1)
+  notes              String?
+  createdById        String
+  createdBy          User                   @relation("PayableCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  renegotiatedFromId String?
+  renegotiatedFrom   AccountPayable?        @relation("PayableRenegotiation", fields: [renegotiatedFromId], references: [id], onDelete: SetNull)
+  renegotiatedTo     AccountPayable[]       @relation("PayableRenegotiation")
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  installments       PayableInstallment[]
+  movements          PayableMovement[]
+  schedules          PayableSchedule[]
+  approvals          PayableApproval[]
+  auditLogs          PayableAuditLog[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([approvalStatus])
+  @@index([dueDate])
+  @@index([origin])
+  @@index([categoryId])
+  @@index([document])
+  @@index([createdById])
+  @@map("account_payables")
+}
+
+model PayableInstallment {
+  id             String                    @id @default(cuid())
+  payableId      String
+  payable        AccountPayable            @relation(fields: [payableId], references: [id], onDelete: Cascade)
+  number         Int
+  dueDate        DateTime                  @db.Date
+  amount         Decimal                   @db.Decimal(18, 4)
+  paidAmount     Decimal                   @default(0) @db.Decimal(18, 4)
+  discountAmount Decimal                   @default(0) @db.Decimal(18, 4)
+  interestAmount Decimal                   @default(0) @db.Decimal(18, 4)
+  fineAmount     Decimal                   @default(0) @db.Decimal(18, 4)
+  status         PayableInstallmentStatus  @default(OPEN)
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  movements      PayableMovement[]
+
+  @@unique([payableId, number])
+  @@index([dueDate])
+  @@index([status])
+  @@map("payable_installments")
+}
+
+model PayableMovement {
+  id                 String               @id @default(cuid())
+  payableId          String
+  payable            AccountPayable       @relation(fields: [payableId], references: [id], onDelete: Cascade)
+  installmentId      String?
+  installment        PayableInstallment?  @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+  type               PayableMovementType
+  amount             Decimal              @db.Decimal(18, 4)
+  paidAt             DateTime             @db.Date
+  paymentMethodId    String?
+  paymentMethod      FinancePaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  bankAccountId      String?
+  bankAccount        BankAccount?         @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  interestAmount     Decimal              @default(0) @db.Decimal(18, 4)
+  fineAmount         Decimal              @default(0) @db.Decimal(18, 4)
+  discountAmount     Decimal              @default(0) @db.Decimal(18, 4)
+  notes              String?
+  operatorId         String
+  operator           User                 @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  idempotencyKey     String?              @unique
+  reversesMovementId String?
+  reversesMovement   PayableMovement?     @relation("PayableReversal", fields: [reversesMovementId], references: [id], onDelete: SetNull)
+  reversedBy         PayableMovement[]    @relation("PayableReversal")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([payableId, createdAt])
+  @@index([installmentId])
+  @@index([operatorId])
+  @@index([type])
+  @@map("payable_movements")
+}
+
+model PayableSchedule {
+  id              String                @id @default(cuid())
+  payableId       String
+  payable         AccountPayable        @relation(fields: [payableId], references: [id], onDelete: Cascade)
+  scheduledDate   DateTime              @db.Date
+  amount          Decimal               @db.Decimal(18, 4)
+  paymentMethodId String?
+  bankAccountId   String?
+  notes           String?
+  status          PayableScheduleStatus @default(SCHEDULED)
+  createdById     String
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([payableId, scheduledDate])
+  @@index([status])
+  @@map("payable_schedules")
+}
+
+model PayableApproval {
+  id           String                @id @default(cuid())
+  payableId    String
+  payable      AccountPayable        @relation(fields: [payableId], references: [id], onDelete: Cascade)
+  status       PayableApprovalStatus
+  amount       Decimal               @db.Decimal(18, 4)
+  reason       String?
+  actorId      String
+  actor        User                  @relation("PayableApprover", fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt    DateTime              @default(now())
+
+  @@index([payableId, createdAt])
+  @@index([actorId])
+  @@map("payable_approvals")
+}
+
+model PayableAuditLog {
+  id         String          @id @default(cuid())
+  payableId  String?
+  payable    AccountPayable? @relation(fields: [payableId], references: [id], onDelete: SetNull)
+  actorId    String
+  actor      User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  amount     Decimal?        @db.Decimal(18, 4)
+  message    String?
+  payloadJson Json?
+  createdAt  DateTime        @default(now())
+
+  @@index([payableId, createdAt])
+  @@index([actorId])
+  @@map("payable_audit_logs")
 }

@@ -278,8 +278,329 @@ async function main() {
     });
   }
 
+  for (const method of [
+    ['DINHEIRO', 'Dinheiro'],
+    ['PIX', 'PIX'],
+    ['TED', 'TED/Transferência'],
+    ['BOLETO', 'Boleto'],
+    ['CARTAO', 'Cartão'],
+  ]) {
+    await prisma.financePaymentMethod.upsert({
+      where: { code: method[0] },
+      update: { label: method[1], active: true },
+      create: { code: method[0], label: method[1], active: true },
+    });
+  }
+
+  for (const account of [
+    ['CX-GERAL', 'Caixa Geral', null],
+    ['BB-001', 'Conta Corrente BB', 'Banco do Brasil'],
+  ]) {
+    await prisma.bankAccount.upsert({
+      where: { code: account[0] },
+      update: { name: account[1], bankName: account[2], active: true },
+      create: {
+        code: account[0],
+        name: account[1],
+        bankName: account[2],
+        active: true,
+      },
+    });
+  }
+
+  for (const center of [
+    ['ADM', 'Administrativo'],
+    ['VEN', 'Vendas'],
+  ]) {
+    await prisma.costCenter.upsert({
+      where: { code: center[0] },
+      update: { name: center[1], active: true },
+      create: { code: center[0], name: center[1], active: true },
+    });
+  }
+
+  const admin = await prisma.user.findUnique({ where: { email } });
+  const maria = await prisma.customer.findUnique({ where: { code: 'CLI-002' } });
+  const pix = await prisma.financePaymentMethod.findUnique({
+    where: { code: 'PIX' },
+  });
+  if (admin && maria) {
+    const existing = await prisma.accountReceivable.findFirst({
+      where: { document: 'NF-SEED-001' },
+    });
+    if (!existing) {
+      const today = new Date();
+      const overdue = new Date(
+        Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 5),
+      );
+      const future = new Date(
+        Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 10),
+      );
+      const issue = new Date(
+        Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 20),
+      );
+
+      const overdueReceivable = await prisma.accountReceivable.create({
+        data: {
+          customerId: maria.id,
+          origin: 'MANUAL',
+          description: 'Serviço de manipulação — seed',
+          document: 'NF-SEED-001',
+          issueDate: issue,
+          dueDate: overdue,
+          originalAmount: 500,
+          paymentMethodId: pix?.id,
+          createdById: admin.id,
+          installmentCount: 1,
+          status: 'OPEN',
+        },
+      });
+      await prisma.receivableInstallment.create({
+        data: {
+          receivableId: overdueReceivable.id,
+          number: 1,
+          dueDate: overdue,
+          amount: 500,
+          status: 'OPEN',
+        },
+      });
+
+      const openReceivable = await prisma.accountReceivable.create({
+        data: {
+          customerId: maria.id,
+          origin: 'MANUAL',
+          description: 'Pedido a prazo — seed',
+          document: 'NF-SEED-002',
+          issueDate: issue,
+          dueDate: future,
+          originalAmount: 320,
+          paymentMethodId: pix?.id,
+          createdById: admin.id,
+          installmentCount: 2,
+          status: 'OPEN',
+        },
+      });
+      await prisma.receivableInstallment.createMany({
+        data: [
+          {
+            receivableId: openReceivable.id,
+            number: 1,
+            dueDate: future,
+            amount: 160,
+            status: 'OPEN',
+          },
+          {
+            receivableId: openReceivable.id,
+            number: 2,
+            dueDate: new Date(
+              Date.UTC(
+                future.getUTCFullYear(),
+                future.getUTCMonth() + 1,
+                future.getUTCDate(),
+              ),
+            ),
+            amount: 160,
+            status: 'OPEN',
+          },
+        ],
+      });
+    }
+  }
+
+  for (const supplier of [
+    {
+      code: 'FOR-001',
+      name: 'Distribuidora Farma Sul',
+      documentType: 'CNPJ',
+      document: '11222333000181',
+      phone: '11990001111',
+    },
+    {
+      code: 'FOR-002',
+      name: 'Insumos Química Brasil',
+      documentType: 'CNPJ',
+      document: '22333444000192',
+      phone: '11990002222',
+    },
+    {
+      code: 'FOR-003',
+      name: 'Serviços Contábeis Alfa',
+      documentType: 'CNPJ',
+      document: '33444555000103',
+      phone: '11990003333',
+    },
+  ]) {
+    await prisma.supplier.upsert({
+      where: { code: supplier.code },
+      update: {
+        name: supplier.name,
+        documentType: supplier.documentType,
+        document: supplier.document,
+        phone: supplier.phone,
+        active: true,
+      },
+      create: supplier,
+    });
+  }
+
+  for (const category of [
+    ['ALUGUEL', 'Aluguel'],
+    ['ENERGIA', 'Energia'],
+    ['INTERNET', 'Internet'],
+    ['MATERIAIS', 'Materiais'],
+    ['SERVICOS', 'Serviços'],
+    ['IMPOSTOS', 'Impostos'],
+    ['OUTROS', 'Outros'],
+  ]) {
+    await prisma.expenseCategory.upsert({
+      where: { code: category[0] },
+      update: { name: category[1], active: true },
+      create: { code: category[0], name: category[1], active: true },
+    });
+  }
+
+  const farmaSul = await prisma.supplier.findUnique({ where: { code: 'FOR-001' } });
+  const quimica = await prisma.supplier.findUnique({ where: { code: 'FOR-002' } });
+  const aluguel = await prisma.expenseCategory.findUnique({
+    where: { code: 'ALUGUEL' },
+  });
+  const materiais = await prisma.expenseCategory.findUnique({
+    where: { code: 'MATERIAIS' },
+  });
+  const energia = await prisma.expenseCategory.findUnique({
+    where: { code: 'ENERGIA' },
+  });
+  const boleto = await prisma.financePaymentMethod.findUnique({
+    where: { code: 'BOLETO' },
+  });
+
+  if (admin && farmaSul && quimica) {
+    const existingPayable = await prisma.accountPayable.findFirst({
+      where: { document: 'NF-AP-SEED-001' },
+    });
+    if (!existingPayable) {
+      const todayAp = new Date();
+      const overdueAp = new Date(
+        Date.UTC(
+          todayAp.getUTCFullYear(),
+          todayAp.getUTCMonth(),
+          todayAp.getUTCDate() - 7,
+        ),
+      );
+      const futureAp = new Date(
+        Date.UTC(
+          todayAp.getUTCFullYear(),
+          todayAp.getUTCMonth(),
+          todayAp.getUTCDate() + 12,
+        ),
+      );
+      const issueAp = new Date(
+        Date.UTC(
+          todayAp.getUTCFullYear(),
+          todayAp.getUTCMonth(),
+          todayAp.getUTCDate() - 25,
+        ),
+      );
+
+      const overduePayable = await prisma.accountPayable.create({
+        data: {
+          supplierId: farmaSul.id,
+          origin: 'PURCHASE',
+          description: 'Compra de insumos — seed',
+          document: 'NF-AP-SEED-001',
+          categoryId: materiais?.id,
+          issueDate: issueAp,
+          dueDate: overdueAp,
+          originalAmount: 850,
+          paymentMethodId: boleto?.id ?? pix?.id,
+          createdById: admin.id,
+          installmentCount: 1,
+          status: 'OPEN',
+        },
+      });
+      await prisma.payableInstallment.create({
+        data: {
+          payableId: overduePayable.id,
+          number: 1,
+          dueDate: overdueAp,
+          amount: 850,
+          status: 'OPEN',
+        },
+      });
+
+      const openPayable = await prisma.accountPayable.create({
+        data: {
+          supplierId: quimica.id,
+          origin: 'MANUAL',
+          description: 'Aluguel mensal — seed',
+          document: 'NF-AP-SEED-002',
+          categoryId: aluguel?.id,
+          issueDate: issueAp,
+          dueDate: futureAp,
+          originalAmount: 4200,
+          paymentMethodId: boleto?.id ?? pix?.id,
+          createdById: admin.id,
+          installmentCount: 1,
+          status: 'OPEN',
+        },
+      });
+      await prisma.payableInstallment.create({
+        data: {
+          payableId: openPayable.id,
+          number: 1,
+          dueDate: futureAp,
+          amount: 4200,
+          status: 'OPEN',
+        },
+      });
+
+      const partialPayable = await prisma.accountPayable.create({
+        data: {
+          supplierId: farmaSul.id,
+          origin: 'CONTRACT',
+          description: 'Energia elétrica — seed parcial',
+          document: 'NF-AP-SEED-003',
+          categoryId: energia?.id,
+          issueDate: issueAp,
+          dueDate: futureAp,
+          originalAmount: 600,
+          paidAmount: 200,
+          paymentMethodId: pix?.id,
+          createdById: admin.id,
+          installmentCount: 2,
+          status: 'PARTIAL',
+        },
+      });
+      await prisma.payableInstallment.createMany({
+        data: [
+          {
+            payableId: partialPayable.id,
+            number: 1,
+            dueDate: futureAp,
+            amount: 300,
+            paidAmount: 200,
+            status: 'PARTIAL',
+          },
+          {
+            payableId: partialPayable.id,
+            number: 2,
+            dueDate: new Date(
+              Date.UTC(
+                futureAp.getUTCFullYear(),
+                futureAp.getUTCMonth() + 1,
+                futureAp.getUTCDate(),
+              ),
+            ),
+            amount: 300,
+            status: 'OPEN',
+          },
+        ],
+      });
+    }
+  }
+
   console.log(
-    `Seed OK: usuário ${email}, lookups, lotes e clientes de venda disponíveis.`,
+    `Seed OK: usuário ${email}, lookups, lotes, clientes, fornecedores e contas a pagar/receber disponíveis.`,
   );
 }
 
