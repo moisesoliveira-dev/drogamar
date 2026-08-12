@@ -91,6 +91,12 @@ const BuscaIaContainer = lazy(() =>
   })),
 )
 
+const DescontosContainer = lazy(() =>
+  import('./features/vendas-descontos').then((m) => ({
+    default: m.DescontosContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -293,6 +299,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <BuscaIaContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="vendas/descontos"
+                element={
+                  <Suspense fallback={null}>
+                    <DescontosContainer />
                   </Suspense>
                 }
               />
