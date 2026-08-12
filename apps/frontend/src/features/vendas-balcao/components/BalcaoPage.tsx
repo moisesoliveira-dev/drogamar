@@ -108,6 +108,11 @@ export function BalcaoPage(props: BalcaoPageProps) {
             <span className={styles.mono}>{row.productCode}</span>
             {row.outOfStock ? <Badge variant="danger">Sem estoque</Badge> : null}
           </span>
+          {row.appliedPromotions?.map((promo) => (
+            <span key={`${promo.promotionId}-${promo.lineId}`} className={styles.promoHint}>
+              Promoção aplicada · − {formatMoney(promo.amount)}
+            </span>
+          ))}
         </div>
       ),
     },
@@ -396,6 +401,17 @@ export function BalcaoPage(props: BalcaoPageProps) {
                   <dd>{formatMoney(props.cart?.totals.total ?? 0)}</dd>
                 </div>
               </dl>
+              {(props.cart?.appliedPromotions ?? []).length > 0 ? (
+                <ul className={styles.promoList}>
+                  {props.cart!.appliedPromotions.map((promo) => (
+                    <li
+                      key={`${promo.promotionId}-${promo.lineId ?? 'cart'}`}
+                    >
+                      {promo.name} · − {formatMoney(promo.amount)}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <TextField
                 label="Desconto do carrinho"
                 inputMode="decimal"

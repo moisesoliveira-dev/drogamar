@@ -7,10 +7,18 @@ export class CarrinhoNetworkError extends Error {
 
 export class CarrinhoServiceError extends Error {
   readonly code?: string
-  constructor(message: string, code?: string) {
+  readonly requested?: number
+  readonly limitPercent?: number
+  constructor(
+    message: string,
+    code?: string,
+    extra?: { requested?: number; limitPercent?: number },
+  ) {
     super(message)
     this.name = 'CarrinhoServiceError'
     this.code = code
+    this.requested = extra?.requested
+    this.limitPercent = extra?.limitPercent
   }
 }
 

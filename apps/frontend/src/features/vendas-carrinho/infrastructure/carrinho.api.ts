@@ -15,19 +15,33 @@ import {
 async function mapError(response: Response): Promise<never> {
   let message: string | undefined
   let code: string | undefined
+  let requested: number | undefined
+  let limitPercent: number | undefined
   try {
     const body = (await response.json()) as {
       code?: string
-      message?: string
+      message?: string | { code?: string; message?: string }
+      requested?: number
+      limitPercent?: number
     }
-    code = body.code
-    message = body.message
+    const payload =
+      typeof body.message === 'object' && body.message ? body.message : body
+    code = payload.code ?? body.code
+    message =
+      typeof payload.message === 'string'
+        ? payload.message
+        : typeof body.message === 'string'
+          ? body.message
+          : undefined
+    requested = body.requested
+    limitPercent = body.limitPercent
   } catch {
     // ignore
   }
   throw new CarrinhoServiceError(
     message ?? 'Não foi possível concluir a operação.',
     code,
+    { requested, limitPercent },
   )
 }
 
@@ -101,10 +115,23 @@ export async function setCartCustomerRequest(
 
 export async function setCartDiscountRequest(
   cartDiscount: number,
+  reason?: string,
 ): Promise<SaleCart> {
   const response = await request(vendasCarrinhoConfig.discountPath, {
     method: 'PATCH',
-    body: JSON.stringify({ cartDiscount }),
+    body: JSON.stringify({ cartDiscount, reason }),
+  })
+  if (!response.ok) await mapError(response)
+  return cartSchema.parse(await response.json())
+}
+
+export async function approveCartDiscountRequest(
+  cartDiscount: number,
+  reason: string,
+): Promise<SaleCart> {
+  const response = await request(vendasCarrinhoConfig.approveDiscountPath, {
+    method: 'POST',
+    body: JSON.stringify({ cartDiscount, reason }),
   })
   if (!response.ok) await mapError(response)
   return cartSchema.parse(await response.json())

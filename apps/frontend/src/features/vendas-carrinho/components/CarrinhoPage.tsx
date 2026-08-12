@@ -29,7 +29,13 @@ export type CarrinhoPageProps = {
   customers: CustomerSearchItem[]
   customersLoading: boolean
   cartDiscountDraft: string
+  cartDiscountReason: string
+  pendingApproval: {
+    requested: number
+    limitPercent: number
+  } | null
   canAddItem: boolean
+  canApproveDiscount: boolean
   canEditQuantity: boolean
   canRemoveItem: boolean
   canApplyDiscount: boolean
@@ -49,7 +55,9 @@ export type CarrinhoPageProps = {
   onLineDiscountChange: (lineId: string, lineDiscount: number) => void
   onRemoveItem: (lineId: string) => void
   onCartDiscountDraftChange: (value: string) => void
+  onCartDiscountReasonChange: (value: string) => void
   onApplyCartDiscount: () => void
+  onApproveCartDiscount: () => void
   onClearCart: () => void
   onCheckout: () => void
   onRefresh: () => void
@@ -73,7 +81,10 @@ export function CarrinhoPage({
   customers,
   customersLoading,
   cartDiscountDraft,
+  cartDiscountReason,
+  pendingApproval,
   canAddItem,
+  canApproveDiscount,
   canEditQuantity,
   canRemoveItem,
   canApplyDiscount,
@@ -93,7 +104,9 @@ export function CarrinhoPage({
   onLineDiscountChange,
   onRemoveItem,
   onCartDiscountDraftChange,
+  onCartDiscountReasonChange,
   onApplyCartDiscount,
+  onApproveCartDiscount,
   onClearCart,
   onCheckout,
   onRefresh,
@@ -121,6 +134,11 @@ export function CarrinhoPage({
               <Badge variant="neutral">Inativo</Badge>
             ) : null}
           </span>
+          {row.appliedPromotions?.map((promo) => (
+            <span key={`${promo.promotionId}-${promo.lineId}`} className={styles.promoHint}>
+              Promoção aplicada · {promo.name} · − {formatMoney(promo.amount)}
+            </span>
+          ))}
         </div>
       ),
     },
@@ -456,6 +474,16 @@ export function CarrinhoPage({
               <dd>{formatMoney(cart?.totals.total ?? 0)}</dd>
             </div>
           </dl>
+          {(cart?.appliedPromotions ?? []).length > 0 ? (
+            <ul className={styles.promoList}>
+              {cart!.appliedPromotions.map((promo) => (
+                <li key={`${promo.promotionId}-${promo.lineId ?? 'cart'}`}>
+                  {promo.name}
+                  <span>− {formatMoney(promo.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
           {canApplyDiscount ? (
             <div className={styles.discountBox}>
@@ -465,6 +493,13 @@ export function CarrinhoPage({
                 onChange={(e) => onCartDiscountDraftChange(e.target.value)}
                 disabled={busy || empty}
               />
+              <TextField
+                label="Motivo"
+                value={cartDiscountReason}
+                onChange={(e) => onCartDiscountReasonChange(e.target.value)}
+                disabled={busy || empty}
+                hint="Obrigatório acima do limite do operador."
+              />
               <Button
                 variant="secondary"
                 disabled={busy || empty}
@@ -472,6 +507,22 @@ export function CarrinhoPage({
               >
                 Aplicar desconto
               </Button>
+              {pendingApproval ? (
+                <Alert variant="warn">
+                  Desconto solicitado: {formatMoney(pendingApproval.requested)}.
+                  Limite do operador: {pendingApproval.limitPercent}%. Status:
+                  aguardando aprovação.
+                </Alert>
+              ) : null}
+              {pendingApproval && canApproveDiscount ? (
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={onApproveCartDiscount}
+                >
+                  Aprovar desconto
+                </Button>
+              ) : null}
             </div>
           ) : null}
 

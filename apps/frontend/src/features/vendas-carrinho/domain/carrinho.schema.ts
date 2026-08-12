@@ -6,6 +6,7 @@ export const vendasCarrinhoConfig = {
   itemPath: (lineId: string) => `/api/vendas/carrinho/itens/${lineId}`,
   customerPath: '/api/vendas/carrinho/cliente',
   discountPath: '/api/vendas/carrinho/desconto',
+  approveDiscountPath: '/api/vendas/carrinho/desconto/aprovar',
   clearPath: '/api/vendas/carrinho/limpar',
   validatePaymentPath: '/api/vendas/carrinho/validar-pagamento',
   holdPath: '/api/vendas/carrinho/suspender',
@@ -49,6 +50,19 @@ export const cartItemSchema = z.object({
   outOfStock: z.boolean(),
   invalidPrice: z.boolean(),
   issues: z.array(cartIssueSchema),
+  lineDiscountManual: z.boolean().optional().default(false),
+  appliedPromotions: z
+    .array(
+      z.object({
+        promotionId: z.string(),
+        name: z.string(),
+        type: z.string(),
+        amount: z.number(),
+        lineId: z.string().nullable(),
+      }),
+    )
+    .optional()
+    .default([]),
 })
 
 export const cartTotalsSchema = z.object({
@@ -74,6 +88,20 @@ export const cartSchema = z.object({
   }),
   customer: cartCustomerSchema.nullable(),
   items: z.array(cartItemSchema),
+  appliedPromotions: z
+    .array(
+      z.object({
+        promotionId: z.string(),
+        name: z.string(),
+        type: z.string(),
+        amount: z.number(),
+        lineId: z.string().nullable(),
+      }),
+    )
+    .optional()
+    .default([]),
+  cartDiscountManual: z.boolean().optional().default(false),
+  operatorDiscountLimitPercent: z.number().optional().default(10),
   totals: cartTotalsSchema,
   canCheckout: z.boolean(),
   issues: z.array(cartIssueSchema),

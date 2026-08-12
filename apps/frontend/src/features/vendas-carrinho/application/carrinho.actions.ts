@@ -8,6 +8,7 @@ import {
   resumeHeldCartRequest,
   searchCustomersRequest,
   searchProductsRequest,
+  approveCartDiscountRequest,
   setCartCustomerRequest,
   setCartDiscountRequest,
   updateCartItemRequest,
@@ -40,8 +41,18 @@ export async function setCartCustomerAction(customerId: string | null) {
   return setCartCustomerRequest(customerId)
 }
 
-export async function setCartDiscountAction(cartDiscount: number) {
-  return setCartDiscountRequest(cartDiscount)
+export async function setCartDiscountAction(
+  cartDiscount: number,
+  reason?: string,
+) {
+  return setCartDiscountRequest(cartDiscount, reason)
+}
+
+export async function approveCartDiscountAction(
+  cartDiscount: number,
+  reason: string,
+) {
+  return approveCartDiscountRequest(cartDiscount, reason)
 }
 
 export async function clearCartAction() {

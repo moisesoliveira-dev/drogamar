@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   addCartItemAction,
+  approveCartDiscountAction,
   clearCartAction,
   getCartAction,
   removeCartItemAction,
@@ -14,7 +15,7 @@ import {
   validatePaymentAction,
 } from '../application/carrinho.actions'
 import { useCarrinhoPermissions } from '../application/use-carrinho-permissions'
-import { mapCarrinhoError } from '../domain/errors'
+import { CarrinhoServiceError, mapCarrinhoError } from '../domain/errors'
 import { VENDAS_CARRINHO_QUERY_KEY } from '../domain/query-keys'
 import { CarrinhoPage } from '../components/CarrinhoPage'
 import { useCarrinhoUiStore } from '../stores/carrinho.store'
@@ -43,6 +44,11 @@ export function CarrinhoContainer() {
   const [cartDiscountDraft, setCartDiscountDraft] = useState<string | null>(
     null,
   )
+  const [cartDiscountReason, setCartDiscountReason] = useState('')
+  const [pendingApproval, setPendingApproval] = useState<{
+    requested: number
+    limitPercent: number
+  } | null>(null)
   const [localError, setLocalError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -133,9 +139,44 @@ export function CarrinhoContainer() {
   })
 
   const discountMutation = useMutation({
-    mutationFn: setCartDiscountAction,
+    mutationFn: ({
+      cartDiscount,
+      reason,
+    }: {
+      cartDiscount: number
+      reason?: string
+    }) => setCartDiscountAction(cartDiscount, reason),
     onSuccess: async () => {
       setLocalError(null)
+      setPendingApproval(null)
+      setCartDiscountDraft(null)
+      await invalidateCart()
+    },
+    onError: (error: unknown) => {
+      if (
+        error instanceof CarrinhoServiceError &&
+        error.code === 'DISCOUNT_NEEDS_APPROVAL'
+      ) {
+        setPendingApproval({
+          requested: error.requested ?? 0,
+          limitPercent: error.limitPercent ?? 10,
+        })
+      }
+      setLocalError(mapCarrinhoError(error))
+    },
+  })
+
+  const approveMutation = useMutation({
+    mutationFn: ({
+      cartDiscount,
+      reason,
+    }: {
+      cartDiscount: number
+      reason: string
+    }) => approveCartDiscountAction(cartDiscount, reason),
+    onSuccess: async () => {
+      setLocalError(null)
+      setPendingApproval(null)
       setCartDiscountDraft(null)
       await invalidateCart()
     },
@@ -171,6 +212,7 @@ export function CarrinhoContainer() {
     removeMutation.isPending ||
     customerMutation.isPending ||
     discountMutation.isPending ||
+    approveMutation.isPending ||
     clearMutation.isPending ||
     checkoutMutation.isPending
 
@@ -194,7 +236,10 @@ export function CarrinhoContainer() {
       customers={customersQuery.data?.items ?? []}
       customersLoading={customersQuery.isFetching}
       cartDiscountDraft={discountValue}
+      cartDiscountReason={cartDiscountReason}
+      pendingApproval={pendingApproval}
       canAddItem={permissions.canAddItem}
+      canApproveDiscount={permissions.canApproveDiscount}
       canEditQuantity={permissions.canEditQuantity}
       canRemoveItem={permissions.canRemoveItem}
       canApplyDiscount={permissions.canApplyDiscount}
@@ -220,6 +265,7 @@ export function CarrinhoContainer() {
       }
       onRemoveItem={(lineId) => removeMutation.mutate(lineId)}
       onCartDiscountDraftChange={setCartDiscountDraft}
+      onCartDiscountReasonChange={setCartDiscountReason}
       onApplyCartDiscount={() => {
         const value = Number(
           discountValue.replace(',', '.').replace(/[^\d.-]/g, ''),
@@ -228,7 +274,21 @@ export function CarrinhoContainer() {
           setLocalError('Informe um desconto válido.')
           return
         }
-        discountMutation.mutate(value)
+        discountMutation.mutate({
+          cartDiscount: value,
+          reason: cartDiscountReason,
+        })
+      }}
+      onApproveCartDiscount={() => {
+        if (!pendingApproval) return
+        if (!cartDiscountReason.trim()) {
+          setLocalError('Informe o motivo do desconto para aprovar.')
+          return
+        }
+        approveMutation.mutate({
+          cartDiscount: pendingApproval.requested,
+          reason: cartDiscountReason,
+        })
       }}
       onClearCart={() => clearMutation.mutate()}
       onCheckout={() => checkoutMutation.mutate()}

@@ -6,6 +6,7 @@ export function useCarrinhoPermissions() {
     canEditQuantity: true,
     canRemoveItem: true,
     canApplyDiscount: true,
+    canApproveDiscount: true,
     canSelectCustomer: true,
     canCheckout: true,
     canClear: true,

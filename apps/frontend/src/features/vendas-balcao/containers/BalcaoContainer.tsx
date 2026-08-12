@@ -215,7 +215,7 @@ export function BalcaoContainer() {
   })
 
   const discountMutation = useMutation({
-    mutationFn: setCartDiscountAction,
+    mutationFn: (cartDiscount: number) => setCartDiscountAction(cartDiscount),
     ...mutationOptions,
   })
 

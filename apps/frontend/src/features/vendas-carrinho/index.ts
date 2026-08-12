@@ -1,6 +1,7 @@
 export { CarrinhoContainer } from './containers/CarrinhoContainer'
 export {
   addCartItemAction,
+  approveCartDiscountAction,
   clearCartAction,
   getCartAction,
   holdCartAction,
