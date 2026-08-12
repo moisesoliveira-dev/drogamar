@@ -52,6 +52,11 @@ model User {
   cashFlowAudits     CashFlowAuditLog[]
   bankAccountsCreated BankAccount[] @relation("BankAccountCreator")
   bankAccountAudits  BankAccountAuditLog[]
+  collectionCasesCreated CollectionCase[] @relation("CollectionCaseCreator")
+  collectionCasesAssigned CollectionCase[] @relation("CollectionCaseAssignee")
+  collectionContacts CollectionContact[]
+  paymentPromisesCreated PaymentPromise[] @relation("PaymentPromiseCreator")
+  collectionAudits   CollectionAuditLog[]
 
   @@index([email])
   @@map("users")
@@ -417,6 +422,7 @@ model Customer {
   updatedAt    DateTime              @updatedAt
   carts        SaleCart[]
   receivables  AccountReceivable[]
+  collectionCases CollectionCase[]
 
   @@unique([code])
   @@index([name])
@@ -845,6 +851,7 @@ model AccountReceivable {
   installments       ReceivableInstallment[]
   movements          ReceivableMovement[]
   auditLogs          ReceivableAuditLog[]
+  collectionItems    CollectionItem[]
 
   @@index([customerId])
   @@index([status])
@@ -1259,4 +1266,151 @@ model CashFlowAuditLog {
   @@index([movementId, createdAt])
   @@index([actorId])
   @@map("cash_flow_audit_logs")
+}
+
+enum CollectionCaseStatus {
+  PENDING
+  IN_PROGRESS
+  CONTACTED
+  PROMISED
+  RESOLVED
+  NO_RESPONSE
+  CANCELLED
+}
+
+enum CollectionContactChannel {
+  PHONE
+  WHATSAPP
+  EMAIL
+  SMS
+  IN_PERSON
+  OTHER
+}
+
+enum CollectionContactOutcome {
+  NO_ANSWER
+  ANSWERED
+  REQUESTED_DEADLINE
+  DISPUTED
+  PROMISED_PAYMENT
+  PAID
+  INVALID_NUMBER
+  INVALID_EMAIL
+  OTHER
+}
+
+enum PaymentPromiseStatus {
+  PENDING
+  KEPT
+  OVERDUE
+  CANCELLED
+}
+
+enum CollectionNextAction {
+  CALL
+  WHATSAPP
+  EMAIL
+  WAIT_PAYMENT
+  CHECK_PROMISE
+  NEGOTIATE
+  CLOSE
+  OTHER
+}
+
+model CollectionCase {
+  id              String               @id @default(cuid())
+  sequentialId    Int                  @unique @default(autoincrement())
+  customerId      String
+  customer        Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  status          CollectionCaseStatus @default(PENDING)
+  assigneeId      String?
+  assignee        User?                @relation("CollectionCaseAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  nextAction      CollectionNextAction?
+  nextActionAt    DateTime?
+  nextActionNotes String?
+  priorityScore   Int                  @default(0)
+  notes           String?
+  openedAt        DateTime             @default(now())
+  closedAt        DateTime?
+  createdById     String
+  createdBy       User                 @relation("CollectionCaseCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  items           CollectionItem[]
+  contacts        CollectionContact[]
+  promises        PaymentPromise[]
+  auditLogs       CollectionAuditLog[]
+
+  @@index([customerId, status])
+  @@index([assigneeId, status])
+  @@index([status, nextActionAt])
+  @@index([priorityScore])
+  @@map("collection_cases")
+}
+
+model CollectionItem {
+  id           String            @id @default(cuid())
+  caseId       String
+  case         CollectionCase    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  receivableId String
+  receivable   AccountReceivable @relation(fields: [receivableId], references: [id], onDelete: Restrict)
+  includedAt   DateTime          @default(now())
+  removedAt    DateTime?
+
+  @@unique([caseId, receivableId])
+  @@index([receivableId])
+  @@map("collection_items")
+}
+
+model CollectionContact {
+  id          String                     @id @default(cuid())
+  caseId      String
+  case        CollectionCase             @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  channel     CollectionContactChannel
+  outcome     CollectionContactOutcome
+  contactedAt DateTime
+  notes       String?
+  actorId     String
+  actor       User                       @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt   DateTime                   @default(now())
+
+  @@index([caseId, contactedAt])
+  @@index([actorId])
+  @@map("collection_contacts")
+}
+
+model PaymentPromise {
+  id             String               @id @default(cuid())
+  caseId         String
+  case           CollectionCase       @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  promisedAmount Decimal              @db.Decimal(18, 4)
+  promisedDate   DateTime             @db.Date
+  status         PaymentPromiseStatus @default(PENDING)
+  notes          String?
+  createdById    String
+  createdBy      User                 @relation("PaymentPromiseCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([caseId, status])
+  @@index([promisedDate, status])
+  @@index([createdById])
+  @@map("payment_promises")
+}
+
+model CollectionAuditLog {
+  id         String          @id @default(cuid())
+  caseId     String?
+  case       CollectionCase? @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  actorId    String
+  actor      User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  amount     Decimal?        @db.Decimal(18, 4)
+  message    String?
+  payloadJson Json?
+  createdAt  DateTime        @default(now())
+
+  @@index([caseId, createdAt])
+  @@index([actorId])
+  @@map("collection_audit_logs")
 }

@@ -776,8 +776,75 @@ async function main() {
     }
   }
 
+  // Cobranças: caso de exemplo para título vencido da Maria Silva
+  if (admin && maria) {
+    const overdueReceivable = await prisma.accountReceivable.findFirst({
+      where: { document: 'NF-SEED-001', customerId: maria.id },
+    });
+    if (overdueReceivable) {
+      let collectionCase = await prisma.collectionCase.findFirst({
+        where: {
+          customerId: maria.id,
+          status: { in: ['PENDING', 'IN_PROGRESS', 'CONTACTED', 'PROMISED', 'NO_RESPONSE'] },
+        },
+      });
+      if (!collectionCase) {
+        collectionCase = await prisma.collectionCase.create({
+          data: {
+            customerId: maria.id,
+            status: 'CONTACTED',
+            priorityScore: 80,
+            notes: 'Caso seed — cobrança do serviço de manipulação',
+            createdById: admin.id,
+            assigneeId: admin.id,
+            nextAction: 'CALL',
+            nextActionAt: new Date(
+              Date.UTC(
+                new Date().getUTCFullYear(),
+                new Date().getUTCMonth(),
+                new Date().getUTCDate() + 1,
+              ),
+            ),
+            nextActionNotes: 'Retornar ligação',
+          },
+        });
+      }
+      const existingItem = await prisma.collectionItem.findUnique({
+        where: {
+          caseId_receivableId: {
+            caseId: collectionCase.id,
+            receivableId: overdueReceivable.id,
+          },
+        },
+      });
+      if (!existingItem) {
+        await prisma.collectionItem.create({
+          data: {
+            caseId: collectionCase.id,
+            receivableId: overdueReceivable.id,
+          },
+        });
+      }
+      const contactCount = await prisma.collectionContact.count({
+        where: { caseId: collectionCase.id },
+      });
+      if (contactCount === 0) {
+        await prisma.collectionContact.create({
+          data: {
+            caseId: collectionCase.id,
+            channel: 'PHONE',
+            outcome: 'NO_ANSWER',
+            contactedAt: new Date(),
+            notes: 'Primeira tentativa — seed',
+            actorId: admin.id,
+          },
+        });
+      }
+    }
+  }
+
   console.log(
-    `Seed OK: usuário ${email}, lookups, lotes, clientes, fornecedores, contas a pagar/receber e fluxo de caixa disponíveis.`,
+    `Seed OK: usuário ${email}, lookups, lotes, clientes, fornecedores, contas a pagar/receber, fluxo de caixa e cobranças disponíveis.`,
   );
 }
 
