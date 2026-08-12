@@ -85,6 +85,12 @@ const BalcaoContainer = lazy(() =>
   })),
 )
 
+const BuscaIaContainer = lazy(() =>
+  import('./features/vendas-busca-ia').then((m) => ({
+    default: m.BuscaIaContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -279,6 +285,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <BalcaoContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="vendas/busca-ia"
+                element={
+                  <Suspense fallback={null}>
+                    <BuscaIaContainer />
                   </Suspense>
                 }
               />
