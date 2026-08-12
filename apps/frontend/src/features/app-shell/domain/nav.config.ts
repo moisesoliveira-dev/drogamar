@@ -128,7 +128,8 @@ export const appModules: NavModuleConfig[] = [
         label: "Cobranças",
         code: "F5",
         path: "/app/financeiro/cobrancas",
-        description: "Cobrança de valores em atraso.",
+        description:
+          'Acompanhe clientes inadimplentes, cobranças e promessas de pagamento.',
       },
       {
         id: "financeiro-relatorios",

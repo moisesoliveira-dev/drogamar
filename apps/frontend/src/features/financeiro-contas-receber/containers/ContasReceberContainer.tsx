@@ -308,7 +308,13 @@ export function ContasReceberContainer() {
           'Exportação financeira usará o mecanismo central (em breve). Por enquanto, use filtros e a listagem.',
         )
       }}
-      onSendCollection={() => navigate(contasReceberConfig.cobrancasPath)}
+      onSendCollection={() =>
+        navigate(
+          detailQuery.data
+            ? `${contasReceberConfig.cobrancasPath}?receivableId=${detailQuery.data.id}`
+            : contasReceberConfig.cobrancasPath,
+        )
+      }
       onRefresh={() => void invalidate()}
     />
   )

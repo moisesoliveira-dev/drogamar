@@ -121,6 +121,12 @@ const CaixaBancosContainer = lazy(() =>
   })),
 );
 
+const CobrancasContainer = lazy(() =>
+  import("./features/financeiro-cobrancas").then((m) => ({
+    default: m.CobrancasContainer,
+  })),
+);
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -369,6 +375,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <CaixaBancosContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="financeiro/cobrancas"
+                element={
+                  <Suspense fallback={null}>
+                    <CobrancasContainer />
                   </Suspense>
                 }
               />
