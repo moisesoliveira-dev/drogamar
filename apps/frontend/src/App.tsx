@@ -103,6 +103,12 @@ const ContasReceberContainer = lazy(() =>
   })),
 )
 
+const ContasPagarContainer = lazy(() =>
+  import('./features/financeiro-contas-pagar').then((m) => ({
+    default: m.ContasPagarContainer,
+  })),
+)
+
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <main
@@ -325,6 +331,14 @@ export default function App() {
                 element={
                   <Suspense fallback={null}>
                     <ContasReceberContainer />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="financeiro/contas-pagar"
+                element={
+                  <Suspense fallback={null}>
+                    <ContasPagarContainer />
                   </Suspense>
                 }
               />
